@@ -1,9 +1,14 @@
 # Blood Bowl Manager
 
 Reconstrucción desde cero de Blood Bowl Manager: consultor de reglas Season
-3, gestor de equipos y comisionado de ligas. Ver [docs/ARCHITECTURA.md](docs/ARCHITECTURE.md)
-para las decisiones de stack, [docs/ROADMAP.md](docs/ROADMAP.md) para los
-hitos y [docs/DATA_MODEL.md](docs/DATA_MODEL.md) para el modelo de datos.
+3, gestor de equipos y comisionado de ligas.
+
+**Documento que gobierna el proyecto: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)**
+(visión, navegación, roadmap por fases, priorización, UX y tecnología).
+Complementos: [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) (dirección de
+arte y tokens), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (decisiones de
+stack de la Fase 0) y [docs/DATA_MODEL.md](docs/DATA_MODEL.md) (modelo de
+datos).
 
 ## Arrancar en local
 

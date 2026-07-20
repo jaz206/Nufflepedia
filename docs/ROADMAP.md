@@ -1,5 +1,9 @@
 # Hoja de ruta
 
+> ⚠️ SUPERADO: la planificación por fases vive ahora en
+> [MASTER_PLAN.md](MASTER_PLAN.md) (§3 Roadmap). Este archivo se conserva
+> como registro histórico del estado de los hitos M0-M1 iniciales.
+
 ## M0 — Cimientos (hecho)
 - Next.js + TypeScript estricto + Tailwind, ESLint limpio.
 - Vitest configurado, motor de reglas con tests en verde.
