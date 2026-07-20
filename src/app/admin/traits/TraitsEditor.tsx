@@ -108,16 +108,31 @@ function TraitForm({
   );
 }
 
+type EnFilter = "all" | "yes" | "no";
+
+function hasEn(trait: Trait) {
+  return Boolean(trait.descriptionEn?.trim());
+}
+
 export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[] }) {
   const [traits, setTraits] = useState(initialTraits);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [formError, setFormError] = useState<string | undefined>(undefined);
+  const [enFilter, setEnFilter] = useState<EnFilter>("all");
   const [isPending, startTransition] = useTransition();
+
+  const missingEnCount = traits.filter((t) => !hasEn(t)).length;
+
+  const filteredTraits = traits.filter((t) => {
+    if (enFilter === "yes") return hasEn(t);
+    if (enFilter === "no") return !hasEn(t);
+    return true;
+  });
 
   const grouped = CATEGORIES.map((category) => ({
     category,
-    items: traits.filter((t) => t.category === category),
+    items: filteredTraits.filter((t) => t.category === category),
   }));
 
   function handleCreate(input: TraitInput) {
@@ -156,8 +171,11 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Rasgos ({traits.length})</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">
+          Rasgos ({traits.length})
+          <span className="ml-2 align-middle text-sm font-normal text-zinc-500">{missingEnCount} sin inglés</span>
+        </h1>
         <button
           className="btn-primary"
           onClick={() => {
@@ -167,6 +185,27 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
         >
           {showNewForm ? "Cerrar" : "+ Nuevo rasgo"}
         </button>
+      </div>
+
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-zinc-500">Inglés:</span>
+        {([
+          ["all", "Todos"],
+          ["no", "Sin inglés"],
+          ["yes", "Con inglés"],
+        ] as [EnFilter, string][]).map(([value, label]) => (
+          <button
+            key={value}
+            onClick={() => setEnFilter(value)}
+            className={
+              enFilter === value
+                ? "rounded-full bg-foreground px-3 py-1 text-background"
+                : "rounded-full border border-zinc-300 dark:border-zinc-700 px-3 py-1 text-zinc-500 hover:text-foreground"
+            }
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {showNewForm && (
@@ -182,7 +221,7 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
       )}
 
       {grouped.map(({ category, items }) => (
-        <section key={category}>
+        <section key={category} className={items.length === 0 ? "hidden" : undefined}>
           <h2 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
             {CATEGORY_LABELS[category]} ({items.length})
           </h2>
