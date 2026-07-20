@@ -1,0 +1,194 @@
+/**
+ * Puebla las tablas maestras editables a partir de la semilla versionada en
+ * src/rules-engine/data. Es seguro ejecutarlo varias veces (upsert por key).
+ */
+import { PrismaClient } from "@prisma/client";
+import { SKILLS } from "../src/rules-engine/data/skills";
+import { TRAITS } from "../src/rules-engine/data/traits";
+import { WEATHER_TABLE } from "../src/rules-engine/data/tables/weather";
+import { KICKOFF_TABLE } from "../src/rules-engine/data/tables/kickoff";
+import { INJURY_TABLE_D16 } from "../src/rules-engine/data/tables/injury";
+import { SPP_VALUES, BRUTOS_BRUTALES_OVERRIDES } from "../src/rules-engine/data/tables/spp";
+import { LEVEL_UP_SPP_COST, LEVEL_UP_TV_IMPACT_GP } from "../src/rules-engine/data/tables/levelUp";
+
+const prisma = new PrismaClient();
+
+function toDbCategory(category: string): string {
+  const map: Record<string, string> = {
+    General: "GENERAL",
+    Agilidad: "AGILIDAD",
+    Fuerza: "FUERZA",
+    Pase: "PASE",
+    Mutacion: "MUTACION",
+    Triquinuelas: "TRIQUINUELAS",
+  };
+  return map[category] ?? category.toUpperCase();
+}
+
+function toDbTraitCategory(category: string): string {
+  const map: Record<string, string> = {
+    General: "GENERAL",
+    Resistencia: "RESISTENCIA",
+    Ataque: "ATAQUE",
+    AccionEspecial: "ACCION_ESPECIAL",
+    Tamano: "TAMANO",
+    Despliegue: "DESPLIEGUE",
+    JugadorEstrella: "JUGADOR_ESTRELLA",
+  };
+  return map[category] ?? category.toUpperCase();
+}
+
+async function main() {
+  console.log(`Sembrando ${SKILLS.length} habilidades...`);
+  for (const skill of SKILLS) {
+    await prisma.masterSkill.upsert({
+      where: { key: skill.key },
+      update: {
+        name: skill.name,
+        englishName: skill.englishName,
+        category: toDbCategory(skill.category) as never,
+        isActive: skill.isActive,
+        isElite: skill.isElite ?? false,
+        description: skill.description,
+      },
+      create: {
+        key: skill.key,
+        name: skill.name,
+        englishName: skill.englishName,
+        category: toDbCategory(skill.category) as never,
+        isActive: skill.isActive,
+        isElite: skill.isElite ?? false,
+        description: skill.description,
+      },
+    });
+  }
+
+  console.log(`Sembrando ${TRAITS.length} rasgos...`);
+  for (const trait of TRAITS) {
+    await prisma.masterTrait.upsert({
+      where: { key: trait.key },
+      update: {
+        name: trait.name,
+        englishName: trait.englishName,
+        category: toDbTraitCategory(trait.category) as never,
+        description: trait.description,
+      },
+      create: {
+        key: trait.key,
+        name: trait.name,
+        englishName: trait.englishName,
+        category: toDbTraitCategory(trait.category) as never,
+        description: trait.description,
+      },
+    });
+  }
+
+  console.log(`Sembrando tabla de Clima (${WEATHER_TABLE.length} filas)...`);
+  await prisma.masterWeatherEntry.deleteMany();
+  await prisma.masterWeatherEntry.createMany({
+    data: WEATHER_TABLE.map((e) => ({
+      minRoll: e.min,
+      maxRoll: e.max,
+      name: e.name,
+      effect: e.effect,
+    })),
+  });
+
+  console.log(`Sembrando tabla de Patada Inicial (${KICKOFF_TABLE.length} filas)...`);
+  for (const entry of KICKOFF_TABLE) {
+    await prisma.masterKickoffEntry.upsert({
+      where: { roll: entry.roll },
+      update: { name: entry.name, effect: entry.effect },
+      create: { roll: entry.roll, name: entry.name, effect: entry.effect },
+    });
+  }
+
+  console.log(`Sembrando tabla de Lesiones D16 (${INJURY_TABLE_D16.length} filas)...`);
+  await prisma.masterInjuryEntry.deleteMany();
+  await prisma.masterInjuryEntry.createMany({
+    data: INJURY_TABLE_D16.map((e) => ({
+      minRoll: e.min,
+      maxRoll: e.max,
+      code: e.code,
+      name: e.name,
+      missesNextGame: e.status === "MISS_NEXT_GAME" || e.status === "BADLY_HURT",
+      permanentStatLoss: e.permanentStatLoss ?? false,
+      isDeath: e.status === "DEAD",
+    })),
+  });
+
+  const sppLabels: Record<string, string> = {
+    PASS_COMPLETE: "Pase completado",
+    CASUALTY: "Baja (Casualty)",
+    INTERCEPTION: "Intercepción",
+    TOUCHDOWN: "Touchdown",
+    MVP: "MVP",
+  };
+  console.log("Sembrando tabla de SPP...");
+  for (const [actionKey, standardValue] of Object.entries(SPP_VALUES)) {
+    await prisma.masterSppValue.upsert({
+      where: { actionKey },
+      update: {
+        label: sppLabels[actionKey] ?? actionKey,
+        standardValue,
+        brutosBrutalesValue: BRUTOS_BRUTALES_OVERRIDES[actionKey as keyof typeof BRUTOS_BRUTALES_OVERRIDES] ?? null,
+      },
+      create: {
+        actionKey,
+        label: sppLabels[actionKey] ?? actionKey,
+        standardValue,
+        brutosBrutalesValue: BRUTOS_BRUTALES_OVERRIDES[actionKey as keyof typeof BRUTOS_BRUTALES_OVERRIDES] ?? null,
+      },
+    });
+  }
+
+  console.log("Sembrando configuración de Level Up...");
+  const levelUpRows = [
+    {
+      configKey: "primarySkillRandom",
+      label: "Habilidad Primaria (al azar)",
+      sppCost: LEVEL_UP_SPP_COST.primarySkillRandom,
+      tvImpactMinGp: LEVEL_UP_TV_IMPACT_GP.primarySkill,
+      tvImpactMaxGp: LEVEL_UP_TV_IMPACT_GP.primarySkill,
+    },
+    {
+      configKey: "primarySkillChosen",
+      label: "Habilidad Primaria (elegida)",
+      sppCost: LEVEL_UP_SPP_COST.primarySkillChosen,
+      tvImpactMinGp: LEVEL_UP_TV_IMPACT_GP.primarySkill,
+      tvImpactMaxGp: LEVEL_UP_TV_IMPACT_GP.primarySkill,
+    },
+    {
+      configKey: "secondarySkillChosen",
+      label: "Habilidad Secundaria (elegida)",
+      sppCost: LEVEL_UP_SPP_COST.secondarySkillChosen,
+      tvImpactMinGp: LEVEL_UP_TV_IMPACT_GP.secondarySkill,
+      tvImpactMaxGp: LEVEL_UP_TV_IMPACT_GP.secondarySkill,
+    },
+    {
+      configKey: "attributeRandom",
+      label: "Mejora de Atributo (1D8 al azar)",
+      sppCost: LEVEL_UP_SPP_COST.attributeRandom,
+      tvImpactMinGp: LEVEL_UP_TV_IMPACT_GP.attribute.min,
+      tvImpactMaxGp: LEVEL_UP_TV_IMPACT_GP.attribute.max,
+    },
+  ];
+  for (const row of levelUpRows) {
+    await prisma.masterLevelUpConfig.upsert({
+      where: { configKey: row.configKey },
+      update: row,
+      create: row,
+    });
+  }
+
+  console.log("Listo.");
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

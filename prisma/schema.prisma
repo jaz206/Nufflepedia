@@ -1,6 +1,13 @@
-// Modelo de datos dinámicos (usuarios, equipos, ligas, partidos).
-// El contenido oficial de reglas (habilidades, rosters, tablas) NO vive aquí:
-// vive en src/rules-engine como datos tipados versionados con el código.
+// Modelo de datos: usuarios, equipos/ligas/partidos, y contenido maestro de
+// reglas editable desde el panel de admin.
+//
+// El contenido maestro (habilidades, rasgos, tablas) tiene dos copias
+// deliberadas:
+//   - src/rules-engine/data/*.ts: la semilla original, versionada con el
+//     código, testeada con Vitest. Es el punto de partida y el fallback.
+//   - Las tablas Master* de aquí abajo: la copia EDITABLE en producción.
+//     El admin la afina desde /admin sin tener que tocar código ni
+//     desplegar. prisma/seed.ts puebla estas tablas a partir de la semilla.
 // Ver docs/DATA_MODEL.md para el razonamiento completo.
 
 generator client {
@@ -201,4 +208,105 @@ model Invitation {
   createdAt     DateTime         @default(now())
 
   @@index([competitionId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Contenido maestro editable (Pilar 1: habilidades, rasgos, tablas).
+// ─────────────────────────────────────────────────────────────────────────
+
+enum SkillCategory {
+  GENERAL
+  AGILIDAD
+  FUERZA
+  PASE
+  MUTACION
+  TRIQUINUELAS
+}
+
+model MasterSkill {
+  id          String        @id @default(uuid())
+  key         String        @unique
+  name        String
+  englishName String?
+  category    SkillCategory
+  isActive    Boolean       @default(false)
+  isElite     Boolean       @default(false)
+  description String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum TraitCategory {
+  GENERAL
+  RESISTENCIA
+  ATAQUE
+  ACCION_ESPECIAL
+  TAMANO
+  DESPLIEGUE
+  JUGADOR_ESTRELLA
+}
+
+model MasterTrait {
+  id          String        @id @default(uuid())
+  key         String        @unique
+  name        String
+  englishName String?
+  category    TraitCategory
+  description String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+/// Tabla de Clima (2D6).
+model MasterWeatherEntry {
+  id        String   @id @default(uuid())
+  minRoll   Int
+  maxRoll   Int
+  name      String
+  effect    String
+  updatedAt DateTime @updatedAt
+}
+
+/// Tabla de Eventos de Patada Inicial (2D6).
+model MasterKickoffEntry {
+  id        String   @id @default(uuid())
+  roll      Int      @unique
+  name      String
+  effect    String
+  updatedAt DateTime @updatedAt
+}
+
+/// Tabla de Lesiones graves (1D16).
+model MasterInjuryEntry {
+  id                String   @id @default(uuid())
+  minRoll           Int
+  maxRoll           Int
+  code              String
+  name              String
+  missesNextGame    Boolean  @default(false)
+  permanentStatLoss Boolean  @default(false)
+  isDeath           Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+}
+
+/// Puntos de Estrellato (SPP/PE) por tipo de acción.
+model MasterSppValue {
+  id                  String   @id @default(uuid())
+  actionKey           String   @unique
+  label               String
+  standardValue       Int
+  /// Valor con la regla especial "Brutos Brutales" (null = sin cambio).
+  brutosBrutalesValue Int?
+  updatedAt           DateTime @updatedAt
+}
+
+/// Coste en PE de las mejoras de progresión (level up) y su impacto en el VAE.
+model MasterLevelUpConfig {
+  id            String   @id @default(uuid())
+  configKey     String   @unique
+  label         String
+  sppCost       Int
+  tvImpactMinGp Int?
+  tvImpactMaxGp Int?
+  updatedAt     DateTime @updatedAt
 }

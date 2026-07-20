@@ -24,3 +24,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer components {
+  .input {
+    @apply w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500;
+  }
+  .btn-primary {
+    @apply rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-900 disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply rounded-md border border-red-300 dark:border-red-900 px-4 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50;
+  }
+}
