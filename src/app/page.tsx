@@ -8,10 +8,10 @@ export default function Home() {
         Reconstrucción desde cero: motor de reglas Season 3, gestor de equipos y comisionado de ligas.
       </p>
       <Link
-        href="/oraculo"
+        href="/nufflepedia"
         className="rounded-full bg-foreground px-6 py-3 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
       >
-        Ver el Oráculo (Pilar 1)
+        Ver la Nufflepedia (Pilar 1)
       </Link>
     </div>
   );

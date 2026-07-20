@@ -13,9 +13,9 @@ cp .env.example .env.local   # y rellena las claves de Supabase
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) — el enlace "Ver el
-Oráculo" muestra el catálogo de habilidades ya cargado desde el motor de
-reglas.
+Abre [http://localhost:3000](http://localhost:3000) — el enlace "Ver la
+Nufflepedia" muestra el catálogo de habilidades ya cargado desde el motor de
+reglas, con buscador y descarga en Markdown.
 
 ## Comandos
 

@@ -16,9 +16,10 @@ deploy inicial en Vercel.
   con tests, pero falta ampliarlo.
 - Portar rosters de las 29 razas (costes, límites 0-16/0-2, primarias/secundarias).
 - Portar Jugadores Estrella con coste y reglas de "Plays For".
-- Tablas interactivas navegables en el Oráculo: Clima, Patada Inicial,
+- Tablas interactivas navegables en la Nufflepedia: Clima, Patada Inicial,
   Lesiones (D16), Errores Costosos, Plegarias a Nuffle.
-- UI de búsqueda/filtro sobre todo lo anterior.
+- UI de búsqueda/filtro sobre habilidades y rasgos (hecho) y descarga del
+  catálogo en Markdown (hecho); falta extender a las tablas.
 
 ## M2 — Pilar 2: Gestor de Equipos
 - Creador de equipo: presupuesto inicial (1,000,000 MO), cálculo de TV en vivo.
