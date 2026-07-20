@@ -11,9 +11,12 @@
 deploy inicial en Vercel.
 
 ## M1 — Pilar 1: La Biblioteca (motor de reglas y consulta)
-- Completar el catálogo de habilidades hasta el listado oficial completo
-  (72+, 6 categorías) — ahora mismo hay un núcleo ya portado y verificado
-  con tests, pero falta ampliarlo.
+- Catálogo de habilidades completo: 72/72, las 12 oficiales de cada una de
+  las 6 categorías (hecho, transcrito de COMPENDIO 2025 Third Season + NAF).
+- Catálogo de rasgos generales: 40, incluida traducción al inglés en curso
+  desde el admin (hecho el contenido en español; faltan 4 sin verificar
+  todavía — Right Stuff, Swarming y los 3 exclusivos de Jugador Estrella,
+  pendientes del capítulo de razas/Jugadores Estrella del manual).
 - Portar rosters de las 29 razas (costes, límites 0-16/0-2, primarias/secundarias).
 - Portar Jugadores Estrella con coste y reglas de "Plays For".
 - Tablas interactivas navegables en la Nufflepedia: Clima, Patada Inicial,
