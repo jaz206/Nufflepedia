@@ -286,24 +286,25 @@ sincronización offline multi-dispositivo · modo proyector para finales.
 
 ---
 
-## Decisiones tomadas en esta versión
+## Decisiones tomadas (v1.0, 2026-07-20)
 
 1. El proyecto existente ES el proyecto: este plan lo gobierna, no lo
    reinicia. El stack de Fase 0 queda ratificado.
 2. Nufflepedia pública como puerta de entrada; gestión tras login.
 3. Roadmap de 6 fases pequeñas, cada una termina desplegada y usable.
-4. Dirección de arte propuesta: «Estadio de medianoche» dark-first.
-5. shadcn/ui + next-intl + Postgres FTS como nuevas incorporaciones.
-6. El design system se construye sobre pantallas reales en Fase 1.
+4. shadcn/ui + next-intl + Postgres FTS como nuevas incorporaciones.
+5. El design system se construye sobre pantallas reales en Fase 1.
+6. **Nombre público: "Nufflepedia"** como marca de toda la app; la sección
+   de consulta pasa a llamarse "La Biblioteca". (Evita usar la marca
+   registrada de GW en el nombre.)
+7. **Interfaz solo en español hasta Fase 5**; el contenido sigue siendo
+   bilingüe a nivel de dato desde ya.
+8. **Fase 1 incluye las 29 razas completas** (transcripción del Compendio
+   + revisión del admin), no un subconjunto.
 
 ## Cuestiones abiertas (necesitan tu decisión)
 
-1. **Dirección de arte**: ¿validas «Estadio de medianoche» o quieres ver
-   1-2 direcciones alternativas maquetadas antes (p. ej. «Pergamino y
-   sangre» claro-medieval, o «Retransmisión Cabalvision» estilo broadcast
-   ochentero)?
-2. **Nombre público**: ¿"Blood Bowl Assistant", "Nufflepedia" como marca
-   general, u otro? (Afecta a logo, dominio y landing de F1.)
-3. **Idiomas**: ¿interfaz ES ahora + EN en F5, o bilingüe desde F1?
-4. **Alcance F1 exacto**: ¿las 29 razas de golpe, o primero las ~8 de
-   vuestra liga para desplegar antes?
+1. **Dirección de arte**: maquetas de las 3 candidatas («Estadio de
+   medianoche», «Pergamino y sangre», «Cabalvision») publicadas para
+   comparar sobre una pantalla real. Pendiente de elegir una — bloquea el
+   inicio visual de F1, no la transcripción de razas.
