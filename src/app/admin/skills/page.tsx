@@ -15,6 +15,7 @@ export default async function AdminSkillsPage() {
         isActive: s.isActive,
         isElite: s.isElite,
         description: s.description,
+        descriptionEn: s.descriptionEn ?? "",
       }))}
     />
   );

@@ -17,6 +17,7 @@ const skillSchema = z.object({
   isActive: z.boolean(),
   isElite: z.boolean(),
   description: z.string().min(1, "La descripcion es obligatoria"),
+  descriptionEn: z.string().optional(),
 });
 
 export type SkillInput = z.infer<typeof skillSchema>;

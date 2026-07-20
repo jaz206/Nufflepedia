@@ -14,6 +14,7 @@ const EMPTY_FORM: SkillInput = {
   isActive: false,
   isElite: false,
   description: "",
+  descriptionEn: "",
 };
 
 function SkillForm({
@@ -71,11 +72,18 @@ function SkillForm({
       </select>
       <textarea
         className="input sm:col-span-2"
-        placeholder="Descripción"
+        placeholder="Descripción (ES)"
         value={form.description}
         onChange={(e) => setForm({ ...form, description: e.target.value })}
         rows={2}
         required
+      />
+      <textarea
+        className="input sm:col-span-2"
+        placeholder="Descripción (EN) — opcional"
+        value={form.descriptionEn ?? ""}
+        onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
+        rows={2}
       />
       <label className="flex items-center gap-2 text-sm">
         <input
@@ -192,6 +200,14 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
                       {skill.isActive && (
                         <span className="text-[10px] uppercase text-sky-600 dark:text-sky-400">Activa</span>
                       )}
+                      <span
+                        className={`text-[10px] uppercase ${
+                          skill.descriptionEn?.trim() ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"
+                        }`}
+                        title={skill.descriptionEn?.trim() ? "Tiene descripción en inglés" : "Falta descripción en inglés"}
+                      >
+                        EN {skill.descriptionEn?.trim() ? "✓" : "—"}
+                      </span>
                       <span className="text-xs text-zinc-400">{skill.key}</span>
                     </div>
                     <p className="text-sm text-zinc-500 mt-1">{skill.description}</p>

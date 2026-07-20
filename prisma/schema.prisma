@@ -232,6 +232,9 @@ model MasterSkill {
   isActive    Boolean       @default(false)
   isElite     Boolean       @default(false)
   description String
+  /// Traduccion al ingles, curada a mano desde el admin (no viene de la
+  /// semilla en rules-engine). Null/vacio hasta que alguien la rellene.
+  descriptionEn String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -253,6 +256,9 @@ model MasterTrait {
   englishName String?
   category    TraitCategory
   description String
+  /// Traduccion al ingles, curada a mano desde el admin (no viene de la
+  /// semilla en rules-engine). Null/vacio hasta que alguien la rellene.
+  descriptionEn String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }

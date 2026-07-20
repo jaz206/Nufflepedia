@@ -12,6 +12,7 @@ const EMPTY_FORM: TraitInput = {
   englishName: "",
   category: "GENERAL",
   description: "",
+  descriptionEn: "",
 };
 
 function TraitForm({
@@ -69,11 +70,18 @@ function TraitForm({
       </select>
       <textarea
         className="input sm:col-span-2"
-        placeholder="Descripción"
+        placeholder="Descripción (ES)"
         value={form.description}
         onChange={(e) => setForm({ ...form, description: e.target.value })}
         rows={2}
         required
+      />
+      <textarea
+        className="input sm:col-span-2"
+        placeholder="Descripción (EN) — opcional"
+        value={form.descriptionEn ?? ""}
+        onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
+        rows={2}
       />
       <div className="sm:col-span-2 flex gap-2">
         <button type="submit" disabled={isPending} className="btn-primary">
@@ -168,6 +176,14 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{trait.name}</span>
+                      <span
+                        className={`text-[10px] uppercase ${
+                          trait.descriptionEn?.trim() ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400"
+                        }`}
+                        title={trait.descriptionEn?.trim() ? "Tiene descripción en inglés" : "Falta descripción en inglés"}
+                      >
+                        EN {trait.descriptionEn?.trim() ? "✓" : "—"}
+                      </span>
                       <span className="text-xs text-zinc-400">{trait.key}</span>
                     </div>
                     <p className="text-sm text-zinc-500 mt-1">{trait.description}</p>

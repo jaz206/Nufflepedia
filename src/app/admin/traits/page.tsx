@@ -13,6 +13,7 @@ export default async function AdminTraitsPage() {
         englishName: t.englishName ?? "",
         category: t.category,
         description: t.description,
+        descriptionEn: t.descriptionEn ?? "",
       }))}
     />
   );

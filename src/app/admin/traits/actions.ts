@@ -15,6 +15,7 @@ const traitSchema = z.object({
   englishName: z.string().optional(),
   category: z.enum(TRAIT_CATEGORY_VALUES),
   description: z.string().min(1, "La descripcion es obligatoria"),
+  descriptionEn: z.string().optional(),
 });
 
 export type TraitInput = z.infer<typeof traitSchema>;
