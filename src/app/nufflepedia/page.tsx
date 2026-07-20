@@ -2,11 +2,12 @@ import { prisma } from "@/server/db/prisma";
 import NufflepediaBrowser from "./NufflepediaBrowser";
 
 export default async function NufflepediaPage() {
-  const [skills, traits, weather, kickoff, injury] = await Promise.all([
+  const [skills, traits, weather, kickoff, prayers, injury] = await Promise.all([
     prisma.masterSkill.findMany({ orderBy: { name: "asc" } }),
     prisma.masterTrait.findMany({ orderBy: { name: "asc" } }),
     prisma.masterWeatherEntry.findMany({ orderBy: { minRoll: "asc" } }),
     prisma.masterKickoffEntry.findMany({ orderBy: { roll: "asc" } }),
+    prisma.masterPrayerEntry.findMany({ orderBy: { roll: "asc" } }),
     prisma.masterInjuryEntry.findMany({ orderBy: { minRoll: "asc" } }),
   ]);
 
@@ -47,6 +48,19 @@ export default async function NufflepediaPage() {
                   <span className="w-12 shrink-0 font-mono text-zinc-400">{k.roll}</span>
                   <span>
                     <strong>{k.name}</strong> — {k.effect}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="sm:col-span-2">
+            <h3 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">Plegarias a Nuffle (1D16)</h3>
+            <ul className="space-y-2 text-sm">
+              {prayers.map((p) => (
+                <li key={p.id} className="flex gap-3">
+                  <span className="w-12 shrink-0 font-mono text-zinc-400">{p.roll}</span>
+                  <span>
+                    <strong>{p.name}</strong> — {p.effect}
                   </span>
                 </li>
               ))}

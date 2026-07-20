@@ -7,6 +7,7 @@ import { requireAdmin } from "@/server/auth/requireAdmin";
 
 const weatherSchema = z.object({ name: z.string().min(1), effect: z.string().min(1) });
 const kickoffSchema = z.object({ name: z.string().min(1), effect: z.string().min(1) });
+const prayerSchema = z.object({ name: z.string().min(1), effect: z.string().min(1) });
 const injurySchema = z.object({
   name: z.string().min(1),
   missesNextGame: z.boolean(),
@@ -35,6 +36,13 @@ export async function updateWeatherEntry(id: string, input: z.infer<typeof weath
 export async function updateKickoffEntry(id: string, input: z.infer<typeof kickoffSchema>) {
   await requireAdmin();
   await prisma.masterKickoffEntry.update({ where: { id }, data: kickoffSchema.parse(input) });
+  revalidatePath("/admin/tables");
+  revalidatePath("/nufflepedia");
+}
+
+export async function updatePrayerEntry(id: string, input: z.infer<typeof prayerSchema>) {
+  await requireAdmin();
+  await prisma.masterPrayerEntry.update({ where: { id }, data: prayerSchema.parse(input) });
   revalidatePath("/admin/tables");
   revalidatePath("/nufflepedia");
 }

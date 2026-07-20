@@ -3,6 +3,7 @@ export * from "./data/skills";
 export * from "./data/traits";
 export * from "./data/tables/weather";
 export * from "./data/tables/kickoff";
+export * from "./data/tables/prayersToNuffle";
 export * from "./data/tables/injury";
 export * from "./data/tables/spp";
 export * from "./data/tables/levelUp";

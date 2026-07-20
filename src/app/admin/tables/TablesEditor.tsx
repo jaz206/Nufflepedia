@@ -5,6 +5,7 @@ import {
   updateInjuryEntry,
   updateKickoffEntry,
   updateLevelUpConfig,
+  updatePrayerEntry,
   updateSppValue,
   updateWeatherEntry,
 } from "./actions";
@@ -17,6 +18,12 @@ interface WeatherRow {
   effect: string;
 }
 interface KickoffRow {
+  id: string;
+  roll: number;
+  name: string;
+  effect: string;
+}
+interface PrayerRow {
   id: string;
   roll: number;
   name: string;
@@ -121,6 +128,45 @@ function KickoffSection({ rows }: { rows: KickoffRow[] }) {
             />
             <input
               className="input flex-[2]"
+              defaultValue={row.effect}
+              disabled={isPending}
+              onBlur={(e) => e.target.value !== row.effect && save(row.id, row.name, e.target.value)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PrayerSection({ rows }: { rows: PrayerRow[] }) {
+  const [items, setItems] = useState(rows);
+  const [isPending, startTransition] = useTransition();
+
+  function save(id: string, name: string, effect: string) {
+    startTransition(async () => {
+      await updatePrayerEntry(id, { name, effect });
+      setItems(items.map((r) => (r.id === id ? { ...r, name, effect } : r)));
+    });
+  }
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+        Plegarias a Nuffle (1D16)
+      </h2>
+      <div className="space-y-2">
+        {items.map((row) => (
+          <div key={row.id} className="flex items-start gap-3">
+            <RollLabel min={row.roll} max={row.roll} />
+            <input
+              className="input flex-1"
+              defaultValue={row.name}
+              onBlur={(e) => e.target.value !== row.name && save(row.id, e.target.value, row.effect)}
+            />
+            <textarea
+              className="input flex-[2]"
+              rows={2}
               defaultValue={row.effect}
               disabled={isPending}
               onBlur={(e) => e.target.value !== row.effect && save(row.id, row.name, e.target.value)}
@@ -322,12 +368,14 @@ function LevelUpSection({ rows }: { rows: LevelUpRow[] }) {
 export default function TablesEditor({
   weather,
   kickoff,
+  prayers,
   injury,
   spp,
   levelUp,
 }: {
   weather: WeatherRow[];
   kickoff: KickoffRow[];
+  prayers: PrayerRow[];
   injury: InjuryRow[];
   spp: SppRow[];
   levelUp: LevelUpRow[];
@@ -340,6 +388,7 @@ export default function TablesEditor({
       </p>
       <WeatherSection rows={weather} />
       <KickoffSection rows={kickoff} />
+      <PrayerSection rows={prayers} />
       <InjurySection rows={injury} />
       <SppSection rows={spp} />
       <LevelUpSection rows={levelUp} />

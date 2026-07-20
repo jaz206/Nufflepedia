@@ -3,6 +3,7 @@ import { SKILLS, getSkillByKey, getSkillsByCategory } from "./data/skills";
 import { TRAITS } from "./data/traits";
 import { WEATHER_TABLE, resolveWeather } from "./data/tables/weather";
 import { KICKOFF_TABLE, resolveKickoff } from "./data/tables/kickoff";
+import { PRAYERS_TO_NUFFLE_TABLE, resolvePrayerToNuffle } from "./data/tables/prayersToNuffle";
 import { resolveArmorRoll, resolveInjuryD16, resolveWoundRoll } from "./data/tables/injury";
 import { getSppValue } from "./data/tables/spp";
 
@@ -50,7 +51,7 @@ describe("weather table", () => {
   });
 
   it("resolves boundary rolls correctly", () => {
-    expect(resolveWeather(2).name).toBe("Calor Sofocante");
+    expect(resolveWeather(2).name).toBe("Calor Asfixiante");
     expect(resolveWeather(4).name).toBe("Clima Perfecto");
     expect(resolveWeather(10).name).toBe("Clima Perfecto");
     expect(resolveWeather(12).name).toBe("Ventisca");
@@ -74,6 +75,23 @@ describe("kickoff table", () => {
 
   it("resolves a known event", () => {
     expect(resolveKickoff(7).name).toBe("Entrenador Brillante");
+  });
+});
+
+describe("prayers to Nuffle table", () => {
+  it("covers every possible 1D16 roll exactly once", () => {
+    const rolls = PRAYERS_TO_NUFFLE_TABLE.map((e) => e.roll).sort((a, b) => a - b);
+    expect(rolls).toEqual(Array.from({ length: 16 }, (_, i) => i + 1));
+  });
+
+  it("resolves a known prayer", () => {
+    expect(resolvePrayerToNuffle(16).name).toBe("Entrenamiento Intensivo");
+    expect(resolvePrayerToNuffle(1).name).toBe("Trampilla Traicionera");
+  });
+
+  it("throws outside the 1-16 range", () => {
+    expect(() => resolvePrayerToNuffle(0)).toThrow();
+    expect(() => resolvePrayerToNuffle(17)).toThrow();
   });
 });
 

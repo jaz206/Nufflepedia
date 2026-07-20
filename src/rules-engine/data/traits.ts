@@ -10,10 +10,12 @@ import type { TraitDefinition } from "../types";
  * son una organización interna heredada del proyecto anterior, no algo
  * oficial. Se mantienen por comodidad de navegación en el admin.
  *
- * TODO: "Right Stuff", "Swarming" y los rasgos exclusivos de Jugador Estrella
- * (Blind Rage, Incorporeal, Tasty Morsel) no aparecen en el capítulo general
- * de Rasgos del manual revisado — pendiente de verificar contra el capítulo
- * de Jugadores Estrella / razas.
+ * Verificado contra el Compendio: "Right Stuff" no existe en esta edición
+ * (su función la cubre "Humanoide Bala") y "Swarming" tampoco aparece — se
+ * eliminaron del catálogo. Los 3 rasgos de Jugador Estrella (Blind Rage,
+ * Incorporeal, Tasty Morsel) siguen sin verificar: el Compendio lista las
+ * plantillas de Star Players pero no incluye el detalle de sus reglas
+ * exclusivas; se mantienen con la descripción corta heredada.
  */
 export const TRAITS: TraitDefinition[] = [
   // ── Generales ────────────────────────────────────────────────────────
@@ -285,12 +287,6 @@ export const TRAITS: TraitDefinition[] = [
 
   // ── Despliegue ───────────────────────────────────────────────────────
   {
-    key: "swarming",
-    name: "Swarming",
-    category: "Despliegue",
-    description: "Al inicio de una entrada, el equipo puede añadir 1D3 jugadores extra desde Reservas.",
-  },
-  {
     key: "infected",
     name: "Infectado",
     englishName: "Infected",
@@ -316,14 +312,6 @@ export const TRAITS: TraitDefinition[] = [
     name: "Tasty Morsel",
     category: "JugadorEstrella",
     description: "Puede morder a un rival débil para satisfacer Sed de Sangre.",
-  },
-
-  // ── Sin verificar (no aparecen en el capítulo general revisado) ──────
-  {
-    key: "right-stuff",
-    name: "Right Stuff",
-    category: "Tamano",
-    description: "Puede ser lanzado por un compañero.",
   },
 ];
 

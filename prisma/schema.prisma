@@ -282,6 +282,15 @@ model MasterKickoffEntry {
   updatedAt DateTime @updatedAt
 }
 
+/// Tabla de Plegarias a Nuffle (1D16).
+model MasterPrayerEntry {
+  id        String   @id @default(uuid())
+  roll      Int      @unique
+  name      String
+  effect    String
+  updatedAt DateTime @updatedAt
+}
+
 /// Tabla de Lesiones graves (1D16).
 model MasterInjuryEntry {
   id                String   @id @default(uuid())

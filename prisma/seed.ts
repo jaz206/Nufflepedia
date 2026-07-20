@@ -7,6 +7,7 @@ import { SKILLS } from "../src/rules-engine/data/skills";
 import { TRAITS } from "../src/rules-engine/data/traits";
 import { WEATHER_TABLE } from "../src/rules-engine/data/tables/weather";
 import { KICKOFF_TABLE } from "../src/rules-engine/data/tables/kickoff";
+import { PRAYERS_TO_NUFFLE_TABLE } from "../src/rules-engine/data/tables/prayersToNuffle";
 import { INJURY_TABLE_D16 } from "../src/rules-engine/data/tables/injury";
 import { SPP_VALUES, BRUTOS_BRUTALES_OVERRIDES } from "../src/rules-engine/data/tables/spp";
 import { LEVEL_UP_SPP_COST, LEVEL_UP_TV_IMPACT_GP } from "../src/rules-engine/data/tables/levelUp";
@@ -97,6 +98,15 @@ async function main() {
   console.log(`Sembrando tabla de Patada Inicial (${KICKOFF_TABLE.length} filas)...`);
   for (const entry of KICKOFF_TABLE) {
     await prisma.masterKickoffEntry.upsert({
+      where: { roll: entry.roll },
+      update: { name: entry.name, effect: entry.effect },
+      create: { roll: entry.roll, name: entry.name, effect: entry.effect },
+    });
+  }
+
+  console.log(`Sembrando tabla de Plegarias a Nuffle (${PRAYERS_TO_NUFFLE_TABLE.length} filas)...`);
+  for (const entry of PRAYERS_TO_NUFFLE_TABLE) {
+    await prisma.masterPrayerEntry.upsert({
       where: { roll: entry.roll },
       update: { name: entry.name, effect: entry.effect },
       create: { roll: entry.roll, name: entry.name, effect: entry.effect },
