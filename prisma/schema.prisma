@@ -1,0 +1,203 @@
+// Modelo de datos dinámicos (usuarios, equipos, ligas, partidos).
+// El contenido oficial de reglas (habilidades, rosters, tablas) NO vive aquí:
+// vive en src/rules-engine como datos tipados versionados con el código.
+// Ver docs/DATA_MODEL.md para el razonamiento completo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id          String   @id @default(uuid())
+  /// UID de Supabase Auth. Fuente de verdad de la identidad del usuario.
+  authId      String   @unique
+  email       String   @unique
+  displayName String
+  role        UserRole @default(USER)
+  createdAt   DateTime @default(now())
+
+  managedTeams       ManagedTeam[]
+  commissionedComps  Competition[]      @relation("Commissioner")
+  competitionEntries CompetitionEntry[]
+  sentInvitations    Invitation[]       @relation("InvitedBy")
+}
+
+/// Estado de un jugador entre partidos (roster). Los estados transitorios de
+/// un partido en curso (Tumbado, Aturdido, Inconsciente) los gestionará el
+/// futuro Match Assistant en tiempo real, no esta tabla.
+enum RosterPlayerStatus {
+  ACTIVE
+  MISS_NEXT_GAME
+  NIGGLING_INJURY
+  DEAD
+  RETIRED
+}
+
+enum SkillSource {
+  ROSTER
+  LEVEL_UP
+  INDUCEMENT
+  STAR_PLAYER
+}
+
+model ManagedTeam {
+  id               String   @id @default(uuid())
+  ownerId          String
+  owner            User     @relation(fields: [ownerId], references: [id])
+  name             String
+  /// Clave del roster oficial (catálogo estático en rules-engine), p.ej. "orcos".
+  rosterKey        String
+  treasury         Int      @default(0)
+  rerolls          Int      @default(0)
+  cheerleaders     Int      @default(0)
+  assistantCoaches Int      @default(0)
+  hasApothecary    Boolean  @default(false)
+  fanFactor        Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  players            ManagedPlayer[]
+  competitionEntries CompetitionEntry[]
+
+  @@index([ownerId])
+}
+
+model ManagedPlayer {
+  id          String             @id @default(uuid())
+  teamId      String
+  team        ManagedTeam        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  number      Int
+  customName  String
+  /// Clave de la posición dentro del roster oficial (catálogo estático).
+  positionKey String
+  spp         Int                @default(0)
+  status      RosterPlayerStatus @default(ACTIVE)
+  createdAt   DateTime           @default(now())
+
+  skills PlayerSkillAssignment[]
+
+  @@index([teamId])
+}
+
+model PlayerSkillAssignment {
+  id       String        @id @default(uuid())
+  playerId String
+  player   ManagedPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  /// Clave de habilidad del catálogo estático (rules-engine).
+  skillKey String
+  source   SkillSource
+
+  @@unique([playerId, skillKey])
+}
+
+enum CompetitionFormat {
+  LEAGUE
+  TOURNAMENT
+}
+
+enum CompetitionVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum CompetitionStatus {
+  OPEN
+  IN_PROGRESS
+  FINISHED
+}
+
+model Competition {
+  id             String                @id @default(uuid())
+  name           String
+  format         CompetitionFormat
+  commissionerId String
+  commissioner   User                  @relation("Commissioner", fields: [commissionerId], references: [id])
+  visibility     CompetitionVisibility @default(PRIVATE)
+  maxTeams       Int
+  status         CompetitionStatus     @default(OPEN)
+  /// Configuración de reglas de la competición (muerte súbita, tiempo de turno, etc).
+  rulesConfig    Json                  @default("{}")
+  createdAt      DateTime              @default(now())
+
+  entries      CompetitionEntry[]
+  invitations  Invitation[]
+  matchReports MatchReport[]
+
+  @@index([commissionerId])
+}
+
+model CompetitionEntry {
+  id            String      @id @default(uuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  managedTeamId String
+  managedTeam   ManagedTeam @relation(fields: [managedTeamId], references: [id])
+  ownerId       String
+  owner         User        @relation(fields: [ownerId], references: [id])
+  division      String?
+
+  played     Int @default(0)
+  won        Int @default(0)
+  drawn      Int @default(0)
+  lost       Int @default(0)
+  tdFor      Int @default(0)
+  tdAgainst  Int @default(0)
+  casFor     Int @default(0)
+  casAgainst Int @default(0)
+  points     Int @default(0)
+
+  homeMatches MatchReport[] @relation("HomeEntry")
+  awayMatches MatchReport[] @relation("AwayEntry")
+
+  @@unique([competitionId, managedTeamId])
+  @@index([competitionId])
+}
+
+model MatchReport {
+  id            String            @id @default(uuid())
+  competitionId String?
+  competition   Competition?      @relation(fields: [competitionId], references: [id])
+  homeEntryId   String?
+  homeEntry     CompetitionEntry? @relation("HomeEntry", fields: [homeEntryId], references: [id])
+  awayEntryId   String?
+  awayEntry     CompetitionEntry? @relation("AwayEntry", fields: [awayEntryId], references: [id])
+
+  homeScore Int
+  awayScore Int
+  /// Log técnico de eventos de partido (ver docs/GAME_EVENTS.md una vez portado).
+  gameLog   Json     @default("[]")
+  headline  String?
+  article   String?
+  playedAt  DateTime @default(now())
+
+  @@index([competitionId])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model Invitation {
+  id            String           @id @default(uuid())
+  competitionId String
+  competition   Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  invitedEmail  String
+  invitedById   String
+  invitedBy     User             @relation("InvitedBy", fields: [invitedById], references: [id])
+  status        InvitationStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+
+  @@index([competitionId])
+}
