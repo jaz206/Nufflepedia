@@ -19,21 +19,34 @@ const traitSchema = z.object({
 });
 
 export type TraitInput = z.infer<typeof traitSchema>;
+export type ActionResult = { ok: true } | { ok: false; error: string };
 
-export async function createTrait(input: TraitInput) {
-  await requireAdmin();
-  const data = traitSchema.parse(input);
-  await prisma.masterTrait.create({ data });
-  revalidatePath("/admin/traits");
-  revalidatePath("/nufflepedia");
+function formatZodError(error: z.ZodError): string {
+  return error.issues.map((issue) => issue.message).join(" · ");
 }
 
-export async function updateTrait(id: string, input: TraitInput) {
+export async function createTrait(input: TraitInput): Promise<ActionResult> {
   await requireAdmin();
-  const data = traitSchema.parse(input);
-  await prisma.masterTrait.update({ where: { id }, data });
+  const parsed = traitSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: formatZodError(parsed.error) };
+  }
+  await prisma.masterTrait.create({ data: parsed.data });
   revalidatePath("/admin/traits");
   revalidatePath("/nufflepedia");
+  return { ok: true };
+}
+
+export async function updateTrait(id: string, input: TraitInput): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = traitSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: formatZodError(parsed.error) };
+  }
+  await prisma.masterTrait.update({ where: { id }, data: parsed.data });
+  revalidatePath("/admin/traits");
+  revalidatePath("/nufflepedia");
+  return { ok: true };
 }
 
 export async function deleteTrait(id: string) {

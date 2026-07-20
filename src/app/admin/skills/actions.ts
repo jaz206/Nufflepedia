@@ -21,21 +21,34 @@ const skillSchema = z.object({
 });
 
 export type SkillInput = z.infer<typeof skillSchema>;
+export type ActionResult = { ok: true } | { ok: false; error: string };
 
-export async function createSkill(input: SkillInput) {
-  await requireAdmin();
-  const data = skillSchema.parse(input);
-  await prisma.masterSkill.create({ data });
-  revalidatePath("/admin/skills");
-  revalidatePath("/nufflepedia");
+function formatZodError(error: z.ZodError): string {
+  return error.issues.map((issue) => issue.message).join(" · ");
 }
 
-export async function updateSkill(id: string, input: SkillInput) {
+export async function createSkill(input: SkillInput): Promise<ActionResult> {
   await requireAdmin();
-  const data = skillSchema.parse(input);
-  await prisma.masterSkill.update({ where: { id }, data });
+  const parsed = skillSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: formatZodError(parsed.error) };
+  }
+  await prisma.masterSkill.create({ data: parsed.data });
   revalidatePath("/admin/skills");
   revalidatePath("/nufflepedia");
+  return { ok: true };
+}
+
+export async function updateSkill(id: string, input: SkillInput): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = skillSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: formatZodError(parsed.error) };
+  }
+  await prisma.masterSkill.update({ where: { id }, data: parsed.data });
+  revalidatePath("/admin/skills");
+  revalidatePath("/nufflepedia");
+  return { ok: true };
 }
 
 export async function deleteSkill(id: string) {

@@ -20,11 +20,15 @@ function TraitForm({
   onSubmit,
   onCancel,
   submitLabel,
+  lockKey,
+  error,
 }: {
   initial: TraitInput;
   onSubmit: (input: TraitInput) => void;
   onCancel?: () => void;
   submitLabel: string;
+  lockKey?: boolean;
+  error?: string;
 }) {
   const [form, setForm] = useState<TraitInput>(initial);
   const [isPending, startTransition] = useTransition();
@@ -37,13 +41,19 @@ function TraitForm({
       }}
       className="grid gap-3 sm:grid-cols-2"
     >
-      <input
-        className="input"
-        placeholder="clave-unica"
-        value={form.key}
-        onChange={(e) => setForm({ ...form, key: e.target.value })}
-        required
-      />
+      {lockKey ? (
+        <div className="input flex items-center bg-zinc-100 dark:bg-zinc-900 text-zinc-500 cursor-not-allowed" title="La clave no se puede cambiar una vez creada">
+          {form.key}
+        </div>
+      ) : (
+        <input
+          className="input"
+          placeholder="clave-unica"
+          value={form.key}
+          onChange={(e) => setForm({ ...form, key: e.target.value })}
+          required
+        />
+      )}
       <input
         className="input"
         placeholder="Nombre"
@@ -83,7 +93,7 @@ function TraitForm({
         onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
         rows={2}
       />
-      <div className="sm:col-span-2 flex gap-2">
+      <div className="sm:col-span-2 flex items-center gap-3">
         <button type="submit" disabled={isPending} className="btn-primary">
           {isPending ? "Guardando..." : submitLabel}
         </button>
@@ -92,6 +102,7 @@ function TraitForm({
             Cancelar
           </button>
         )}
+        {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
       </div>
     </form>
   );
@@ -101,6 +112,7 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
   const [traits, setTraits] = useState(initialTraits);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
 
   const grouped = CATEGORIES.map((category) => ({
@@ -109,16 +121,26 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
   }));
 
   function handleCreate(input: TraitInput) {
+    setFormError(undefined);
     startTransition(async () => {
-      await createTrait(input);
+      const result = await createTrait(input);
+      if (!result.ok) {
+        setFormError(result.error);
+        return;
+      }
       setTraits([...traits, { ...input, id: crypto.randomUUID() }]);
       setShowNewForm(false);
     });
   }
 
   function handleUpdate(id: string, input: TraitInput) {
+    setFormError(undefined);
     startTransition(async () => {
-      await updateTrait(id, input);
+      const result = await updateTrait(id, input);
+      if (!result.ok) {
+        setFormError(result.error);
+        return;
+      }
       setTraits(traits.map((t) => (t.id === id ? { ...input, id } : t)));
       setEditingId(null);
     });
@@ -136,7 +158,13 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Rasgos ({traits.length})</h1>
-        <button className="btn-primary" onClick={() => setShowNewForm((v) => !v)}>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setFormError(undefined);
+            setShowNewForm((v) => !v);
+          }}
+        >
           {showNewForm ? "Cerrar" : "+ Nuevo rasgo"}
         </button>
       </div>
@@ -148,6 +176,7 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
             submitLabel="Crear"
             onSubmit={handleCreate}
             onCancel={() => setShowNewForm(false)}
+            error={formError}
           />
         </div>
       )}
@@ -165,7 +194,12 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
                     initial={trait}
                     submitLabel="Guardar"
                     onSubmit={(input) => handleUpdate(trait.id, input)}
-                    onCancel={() => setEditingId(null)}
+                    onCancel={() => {
+                      setFormError(undefined);
+                      setEditingId(null);
+                    }}
+                    lockKey
+                    error={formError}
                   />
                 </div>
               ) : (
@@ -189,7 +223,14 @@ export default function TraitsEditor({ initialTraits }: { initialTraits: Trait[]
                     <p className="text-sm text-zinc-500 mt-1">{trait.description}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button className="btn-secondary" onClick={() => setEditingId(trait.id)} disabled={isPending}>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setFormError(undefined);
+                        setEditingId(trait.id);
+                      }}
+                      disabled={isPending}
+                    >
                       Editar
                     </button>
                     <button className="btn-danger" onClick={() => handleDelete(trait.id)} disabled={isPending}>

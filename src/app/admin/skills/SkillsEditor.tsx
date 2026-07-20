@@ -22,11 +22,15 @@ function SkillForm({
   onSubmit,
   onCancel,
   submitLabel,
+  lockKey,
+  error,
 }: {
   initial: SkillInput;
   onSubmit: (input: SkillInput) => void;
   onCancel?: () => void;
   submitLabel: string;
+  lockKey?: boolean;
+  error?: string;
 }) {
   const [form, setForm] = useState<SkillInput>(initial);
   const [isPending, startTransition] = useTransition();
@@ -39,13 +43,19 @@ function SkillForm({
       }}
       className="grid gap-3 sm:grid-cols-2"
     >
-      <input
-        className="input"
-        placeholder="clave-unica"
-        value={form.key}
-        onChange={(e) => setForm({ ...form, key: e.target.value })}
-        required
-      />
+      {lockKey ? (
+        <div className="input flex items-center bg-zinc-100 dark:bg-zinc-900 text-zinc-500 cursor-not-allowed" title="La clave no se puede cambiar una vez creada">
+          {form.key}
+        </div>
+      ) : (
+        <input
+          className="input"
+          placeholder="clave-unica"
+          value={form.key}
+          onChange={(e) => setForm({ ...form, key: e.target.value })}
+          required
+        />
+      )}
       <input
         className="input"
         placeholder="Nombre (ES)"
@@ -101,7 +111,7 @@ function SkillForm({
         />
         Élite (+10,000 MO)
       </label>
-      <div className="sm:col-span-2 flex gap-2">
+      <div className="sm:col-span-2 flex items-center gap-3">
         <button type="submit" disabled={isPending} className="btn-primary">
           {isPending ? "Guardando..." : submitLabel}
         </button>
@@ -110,6 +120,7 @@ function SkillForm({
             Cancelar
           </button>
         )}
+        {error && <span className="text-sm text-red-600 dark:text-red-400">{error}</span>}
       </div>
     </form>
   );
@@ -119,6 +130,7 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
   const [skills, setSkills] = useState(initialSkills);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
 
   const grouped = CATEGORIES.map((category) => ({
@@ -127,16 +139,26 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
   }));
 
   function handleCreate(input: SkillInput) {
+    setFormError(undefined);
     startTransition(async () => {
-      await createSkill(input);
+      const result = await createSkill(input);
+      if (!result.ok) {
+        setFormError(result.error);
+        return;
+      }
       setSkills([...skills, { ...input, id: crypto.randomUUID() }]);
       setShowNewForm(false);
     });
   }
 
   function handleUpdate(id: string, input: SkillInput) {
+    setFormError(undefined);
     startTransition(async () => {
-      await updateSkill(id, input);
+      const result = await updateSkill(id, input);
+      if (!result.ok) {
+        setFormError(result.error);
+        return;
+      }
       setSkills(skills.map((s) => (s.id === id ? { ...input, id } : s)));
       setEditingId(null);
     });
@@ -154,7 +176,13 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Habilidades ({skills.length})</h1>
-        <button className="btn-primary" onClick={() => setShowNewForm((v) => !v)}>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setFormError(undefined);
+            setShowNewForm((v) => !v);
+          }}
+        >
           {showNewForm ? "Cerrar" : "+ Nueva habilidad"}
         </button>
       </div>
@@ -166,6 +194,7 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
             submitLabel="Crear"
             onSubmit={handleCreate}
             onCancel={() => setShowNewForm(false)}
+            error={formError}
           />
         </div>
       )}
@@ -183,7 +212,12 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
                     initial={skill}
                     submitLabel="Guardar"
                     onSubmit={(input) => handleUpdate(skill.id, input)}
-                    onCancel={() => setEditingId(null)}
+                    onCancel={() => {
+                      setFormError(undefined);
+                      setEditingId(null);
+                    }}
+                    lockKey
+                    error={formError}
                   />
                 </div>
               ) : (
@@ -213,7 +247,14 @@ export default function SkillsEditor({ initialSkills }: { initialSkills: Skill[]
                     <p className="text-sm text-zinc-500 mt-1">{skill.description}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button className="btn-secondary" onClick={() => setEditingId(skill.id)} disabled={isPending}>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setFormError(undefined);
+                        setEditingId(skill.id);
+                      }}
+                      disabled={isPending}
+                    >
                       Editar
                     </button>
                     <button className="btn-danger" onClick={() => handleDelete(skill.id)} disabled={isPending}>
