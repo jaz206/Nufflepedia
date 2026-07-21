@@ -325,3 +325,73 @@ model MasterLevelUpConfig {
   tvImpactMaxGp Int?
   updatedAt     DateTime @updatedAt
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Razas / plantillas oficiales (Fase 1). Ver docs/RACES_DATA_MODEL.md.
+// ─────────────────────────────────────────────────────────────────────────
+
+model MasterRace {
+  id               String   @id @default(uuid())
+  key              String   @unique
+  name             String
+  pageRef          Int?
+  tier             Int?
+  /// Reglas especiales de equipo (ej. "Capitán del Equipo", "Brutos Brutales").
+  specialRules     String[]
+  /// Ligas a las que pertenece (determina qué estrellas puede fichar).
+  leagues          String[]
+  rerollCost       Int
+  rerollMax        Int      @default(8)
+  allowsApothecary Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  positions        MasterPosition[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model MasterPosition {
+  id                  String          @id @default(uuid())
+  raceId              String
+  race                MasterRace      @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  name                String
+  /// Palabras clave del paréntesis: racial + posicional ("Grandullón"=Big Guy).
+  playerTags          String[]
+  quantityMin         Int             @default(0)
+  quantityMax         Int
+  cost                Int
+  ma                  Int
+  st                  Int
+  /// AG/PA/AV como "para superar" (3 = 3+). pa null = no puede pasar ("–").
+  ag                  Int
+  pa                  Int?
+  av                  Int
+  /// Claves de habilidades/rasgos iniciales (catálogo estático).
+  startingSkillKeys   String[]
+  primaryCategories   SkillCategory[]
+  secondaryCategories SkillCategory[]
+  sortOrder           Int             @default(0)
+
+  @@index([raceId])
+}
+
+model MasterStarPlayer {
+  id              String   @id @default(uuid())
+  key             String   @unique
+  name            String
+  playerTags      String[]
+  cost            Int
+  ma              Int
+  st              Int
+  ag              Int
+  pa              Int?
+  av              Int
+  skillKeys       String[]
+  /// "Cualquier equipo": puede ficharlo cualquier raza.
+  playsForAny     Boolean  @default(false)
+  /// Ligas para las que juega (si no es playsForAny).
+  leagues         String[]
+  specialRuleName String?
+  specialRuleText String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

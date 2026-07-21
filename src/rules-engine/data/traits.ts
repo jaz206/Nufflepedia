@@ -35,6 +35,22 @@ export const TRAITS: TraitDefinition[] = [
     description: "Este jugador no puede declarar acciones de Asegurar el balón.",
   },
   {
+    key: "sed-de-sangre",
+    name: "Sed de Sangre (X+)",
+    englishName: "Bloodlust",
+    category: "General",
+    description:
+      "Cuando este jugador es activado, tras declarar su acción, tira 1D6 (con +1 si ha declarado Placaje o Penetración). Si el resultado es igual o mayor que el número entre paréntesis, se activa con normalidad. Si es inferior (o un 1 natural), este jugador puede cambiar su acción declarada por una de Movimiento y, al final de su activación, puede morder a un compañero Línea Esclavo adyacente (haz una tirada de Heridas por él, tratando cualquier Lesionado como Magullado; no causa cambio de turno salvo que el Esclavo llevara el balón). Si no muerde a un Línea Esclavo, se produce un cambio de turno, este jugador queda Distraído e inmediatamente suelta el balón si era el portador.",
+  },
+  {
+    key: "furia-asesina",
+    name: "Furia Asesina",
+    englishName: "Killer Instinct",
+    category: "General",
+    description:
+      "Regla especial de los equipos de Khorne. Texto pendiente de verificar contra el reglamento oficial (no incluido en el PDF de referencia).",
+  },
+  {
     key: "bone-head",
     name: "Estúpido",
     englishName: "Bone Head",
