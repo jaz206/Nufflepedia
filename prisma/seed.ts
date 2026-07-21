@@ -121,7 +121,9 @@ async function main() {
       maxRoll: e.max,
       code: e.code,
       name: e.name,
-      missesNextGame: e.status === "MISS_NEXT_GAME" || e.status === "BADLY_HURT",
+      // Magullado (1-8, BADLY_HURT) NO se pierde el siguiente partido: solo el
+      // resto del actual. Oficial 2025: "no sufre efectos a largo plazo".
+      missesNextGame: e.status === "MISS_NEXT_GAME",
       permanentStatLoss: e.permanentStatLoss ?? false,
       isDeath: e.status === "DEAD",
     })),
