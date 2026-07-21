@@ -1,41 +1,228 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════
+   «Pergamino y sangre» — tokens (ver docs/DESIGN_SYSTEM.md)
+   Light-first; el tema oscuro es una variante cálida ("a la luz de velas").
+   ═══════════════════════════════════════════════════════════════════════ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f1ebdd;
+  --surface-1: #f9f5eb;
+  --surface-2: #eae2cf;
+  --surface-3: #fdfbf5;
+  --border: #d6ccb4;
+  --border-strong: #b8ab8c;
+  --ink: #2b241c;
+  --ink-2: #5c5344;
+  --ink-3: #8b8069;
+  --accent: #8e1e1e;
+  --accent-hover: #a82828;
+  --accent-ink: #fbf1e9;
+  --gold: #7a5c12;
+  --gold-soft: #9a7a24;
+  --ok: #2e6b41;
+  --warn: #9a6b15;
+  --info: #2f5d84;
+  --danger: #b5322e;
+
+  /* Aliases heredados usados por body y botones antiguos */
+  --background: var(--bg);
+  --foreground: var(--ink);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Variante oscura cálida (tomo de cuero a la luz de las velas) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #1a1611;
+    --surface-1: #221d16;
+    --surface-2: #2b241b;
+    --surface-3: #332b20;
+    --border: #3a3226;
+    --border-strong: #4e4432;
+    --ink: #efe7d6;
+    --ink-2: #b5a98f;
+    --ink-3: #7e735c;
+    --accent: #cf4436;
+    --accent-hover: #e15748;
+    --accent-ink: #1a1611;
+    --gold: #c9a227;
+    --gold-soft: #a8871f;
+    --ok: #5fb07c;
+    --warn: #d2a24b;
+    --info: #6fa0ce;
+    --danger: #e0655a;
   }
 }
 
+/* El toggle de tema (cuando exista) gana sobre prefers-color-scheme */
+:root[data-theme="dark"] {
+  --bg: #1a1611;
+  --surface-1: #221d16;
+  --surface-2: #2b241b;
+  --surface-3: #332b20;
+  --border: #3a3226;
+  --border-strong: #4e4432;
+  --ink: #efe7d6;
+  --ink-2: #b5a98f;
+  --ink-3: #7e735c;
+  --accent: #cf4436;
+  --accent-hover: #e15748;
+  --accent-ink: #1a1611;
+  --gold: #c9a227;
+  --gold-soft: #a8871f;
+  --ok: #5fb07c;
+  --warn: #d2a24b;
+  --info: #6fa0ce;
+  --danger: #e0655a;
+}
+:root[data-theme="light"] {
+  --bg: #f1ebdd;
+  --surface-1: #f9f5eb;
+  --surface-2: #eae2cf;
+  --surface-3: #fdfbf5;
+  --border: #d6ccb4;
+  --border-strong: #b8ab8c;
+  --ink: #2b241c;
+  --ink-2: #5c5344;
+  --ink-3: #8b8069;
+  --accent: #8e1e1e;
+  --accent-hover: #a82828;
+  --accent-ink: #fbf1e9;
+  --gold: #7a5c12;
+  --gold-soft: #9a7a24;
+  --ok: #2e6b41;
+  --warn: #9a6b15;
+  --info: #2f5d84;
+  --danger: #b5322e;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Puente con Tailwind: fuentes + remapeo de la escala neutra y de acentos
+   a los tokens (theme-aware). Así las clases de color (zinc, amber, sky,
+   emerald, red) que ya usan los componentes pasan a «Pergamino y sangre»
+   sin reescribirlas.
+   ═══════════════════════════════════════════════════════════════════════ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans-serif);
+  --font-mono: var(--font-mono-data);
+  --font-display: var(--font-display);
+
+  /* Neutros → pergamino */
+  --color-zinc-50: var(--surface-1);
+  --color-zinc-100: var(--surface-2);
+  --color-zinc-200: var(--border);
+  --color-zinc-300: var(--border-strong);
+  --color-zinc-400: var(--ink-3);
+  --color-zinc-500: var(--ink-2);
+  --color-zinc-600: var(--ink-2);
+  --color-zinc-700: var(--border-strong);
+  --color-zinc-800: var(--border);
+  --color-zinc-900: var(--surface-2);
+  --color-black: var(--bg);
+
+  /* Acentos semánticos usados en badges y textos */
+  --color-amber-400: var(--gold);
+  --color-amber-600: var(--gold);
+  --color-sky-400: var(--info);
+  --color-sky-600: var(--info);
+  --color-emerald-400: var(--ok);
+  --color-emerald-600: var(--ok);
+  --color-red-300: var(--danger);
+  --color-red-400: var(--danger);
+  --color-red-500: var(--danger);
+  --color-red-600: var(--danger);
+  --color-red-900: var(--danger);
+  --color-red-50: var(--surface-2);
+  --color-red-950: var(--surface-2);
+}
+
 body {
-  background: var(--background);
+  background-color: var(--bg);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans-serif), Georgia, "Times New Roman", serif;
+  /* Grano de pergamino sutil, theme-aware, detrás de todo */
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 3%, transparent) 0.5px, transparent 0.6px);
+  background-size: 3px 3px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: 0.005em;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 @layer components {
   .input {
-    @apply w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500;
+    width: 100%;
+    border-radius: 3px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-1);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
+  .input::placeholder {
+    color: var(--ink-3);
+  }
+  .input:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
   .btn-primary {
-    @apply rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] disabled:opacity-50;
+    border-radius: 3px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: var(--accent);
+    color: var(--accent-ink);
+    transition: background-color 0.15s;
   }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+  }
+
   .btn-secondary {
-    @apply rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-900 disabled:opacity-50;
+    border-radius: 3px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-strong);
+    color: var(--ink);
+    background: transparent;
+    transition: background-color 0.15s;
   }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+  .btn-secondary:disabled {
+    opacity: 0.5;
+  }
+
   .btn-danger {
-    @apply rounded-md border border-red-300 dark:border-red-900 px-4 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50;
+    border-radius: 3px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    background: transparent;
+    transition: background-color 0.15s;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+  }
+  .btn-danger:disabled {
+    opacity: 0.5;
   }
 }
