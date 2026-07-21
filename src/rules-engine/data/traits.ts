@@ -98,7 +98,7 @@ export const TRAITS: TraitDefinition[] = [
   {
     key: "el-balon-es-mio",
     name: "El Balón es Mío",
-    englishName: "Ball and Chain",
+    englishName: "My Ball",
     category: "General",
     description:
       "Cuando este jugador es el portador del balón, no puede dejar de serlo voluntariamente. Por tanto, no puede declarar acciones de Pase o de Entregar el balón, ni usar habilidades o rasgos que le hagan renunciar a ser el portador del balón. Las únicas formas de que este jugador suelte el balón son que sea Derribado o colocado Tumbado boca arriba, se Caiga, o por el efecto de una habilidad, rasgo o regla especial de un jugador rival.",
@@ -113,7 +113,7 @@ export const TRAITS: TraitDefinition[] = [
   {
     key: "levantar-companero",
     name: "Levantar Compañero",
-    englishName: "Stand Firm",
+    englishName: "Lift Team-mate",
     category: "General",
     description:
       "Al final de cada turno del equipo rival, tira 1D6 por cada jugador de tu equipo Tumbado boca arriba a 3 casillas o menos de algún jugador En pie de tu equipo con este rasgo. Con 5+, el jugador Tumbado boca arriba puede levantarse de inmediato. Si un jugador con este rasgo se levanta debido al uso de este rasgo por parte de un compañero, no puede a su vez usar este rasgo durante ese mismo turno.",

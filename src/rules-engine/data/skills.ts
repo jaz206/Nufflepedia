@@ -350,7 +350,7 @@ export const SKILLS: SkillDefinition[] = [
   {
     key: "canonero",
     name: "Cañonero",
-    englishName: "Big Hand",
+    englishName: "Cannoneer",
     category: "Pase",
     isActive: true,
     description: "Cuando este jugador realiza una acción de Pase que sea un pase largo o una bomba larga, puede aplicar un modificador de +1 al chequeo de Pase.",
