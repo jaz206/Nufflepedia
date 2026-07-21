@@ -562,7 +562,7 @@ export const SKILLS: SkillDefinition[] = [
   {
     key: "dump-off",
     name: "Dejada",
-    englishName: "Drop Off",
+    englishName: "Fumblerooski",
     category: "Triquinuelas",
     isActive: true,
     description: "Cuando este jugador sea el portador del balón y realice una acción de Movimiento, puede elegir “dejar el balón”, colocándolo en cualquier casilla que abandone durante dicha acción de Movimiento. Esto no provoca un cambio de turno.",

@@ -113,7 +113,7 @@ export const TRAITS: TraitDefinition[] = [
   {
     key: "levantar-companero",
     name: "Levantar Compañero",
-    englishName: "Lift Team-mate",
+    englishName: "Pick-Me-Up",
     category: "General",
     description:
       "Al final de cada turno del equipo rival, tira 1D6 por cada jugador de tu equipo Tumbado boca arriba a 3 casillas o menos de algún jugador En pie de tu equipo con este rasgo. Con 5+, el jugador Tumbado boca arriba puede levantarse de inmediato. Si un jugador con este rasgo se levanta debido al uso de este rasgo por parte de un compañero, no puede a su vez usar este rasgo durante ese mismo turno.",
