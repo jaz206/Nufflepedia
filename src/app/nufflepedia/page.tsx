@@ -1,10 +1,12 @@
+import Link from "next/link";
 import { prisma } from "@/server/db/prisma";
 import NufflepediaBrowser from "./NufflepediaBrowser";
 
 export default async function NufflepediaPage() {
-  const [skills, traits, weather, kickoff, prayers, injury] = await Promise.all([
+  const [skills, traits, raceCount, weather, kickoff, prayers, injury] = await Promise.all([
     prisma.masterSkill.findMany({ orderBy: { name: "asc" } }),
     prisma.masterTrait.findMany({ orderBy: { name: "asc" } }),
+    prisma.masterRace.count(),
     prisma.masterWeatherEntry.findMany({ orderBy: { minRoll: "asc" } }),
     prisma.masterKickoffEntry.findMany({ orderBy: { roll: "asc" } }),
     prisma.masterPrayerEntry.findMany({ orderBy: { roll: "asc" } }),
@@ -18,6 +20,12 @@ export default async function NufflepediaPage() {
         <p className="mt-2 text-zinc-500">
           Motor de reglas Season 3 — {skills.length} habilidades, {traits.length} rasgos.
         </p>
+        <Link
+          href="/nufflepedia/razas"
+          className="mt-4 inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
+        >
+          Ver las {raceCount} razas →
+        </Link>
       </div>
 
       <NufflepediaBrowser skills={skills} traits={traits} />
