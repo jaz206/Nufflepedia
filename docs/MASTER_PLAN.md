@@ -130,31 +130,29 @@ modo espectador en vivo.
 
 ## 5. Diseño visual (dirección de arte)
 
-Objetivo: *videojuego moderno*, no web corporativa ni parodia del estilo
-oficial de GW. La dirección elegida (pendiente de validar contigo, ver
-Cuestiones abiertas) es:
+Objetivo: un producto digital premium, no web corporativa ni parodia del
+estilo oficial de GW. **Dirección elegida (2026-07-20): «Pergamino y
+sangre».** Especificada en detalle en `DESIGN_SYSTEM.md`.
 
-**«Estadio de medianoche» (dark-first).** La app es la retransmisión
-nocturna de un deporte brutal en un mundo de fantasía: fondos casi negros
-con textura sutil de metal/piedra, información sobre "paneles de marcador",
-un acento carmesí sangre y un secundario latón/oro viejo para lo épico.
-Legibilidad de lectura larga sobre superficies "pergamino oscuro".
+**«Pergamino y sangre» (light-first).** La app es el tomo de reglas oficial
+reimaginado como producto digital de lujo: base pergamino, tinta sepia,
+rojo sangre como acento de acción y oro viejo para lo épico/élite. El tema
+oscuro es una variante cálida ("tomo a la luz de las velas"), no un
+rediseño. Se eligió sobre las alternativas dark («Estadio de medianoche») y
+broadcast («Cabalvision») por su legibilidad en mesa con mala luz y su
+encaje con la idea de "reglamento digitalizado".
 
 - **Personalidad**: épica, socarrona, violenta con humor (el tono Jim &
   Bob). Los textos de interfaz pueden tener sabor ("¡Nuffle lo ha querido!")
   pero nunca a costa de la claridad.
-- **Color**: ver tokens en `DESIGN_SYSTEM.md`. Base carbón (#0E0D10 aprox),
-  carmesí como acento único de acción, latón para hitos/élite, verdes/rojos
-  semánticos aparte del acento.
-- **Tipografía**: una display condensada y contundente para titulares y
-  números de marcador (sabor deportivo-brutal), una sans neutra y muy
-  legible para interfaz y lectura, una mono para dados/claves/datos.
-- **Iconografía**: línea gruesa, esquinas talladas, consistente (una sola
-  librería + iconos propios para conceptos del juego: dados de placaje,
-  balón, casillas).
-- **Ilustración**: escudos y viñetas con estética "grabado/xilografía
-  moderna"; nada de clipart ni IA genérica sin dirección.
-- **Fondos**: gradientes muy oscuros + grano sutil; nunca fotos.
+- **Tipografía**: serif para el contenido (Cinzel display + Spectral cuerpo)
+  y sans/mono para mandos y datos. El contraste serif-contenido /
+  sans-mandos es deliberado.
+- **Iconografía**: línea gruesa, consistente (una sola librería + iconos
+  propios para conceptos del juego: dados de placaje, balón, casillas).
+- **Ilustración**: escudos y viñetas con estética "grabado/xilografía";
+  nada de clipart ni IA genérica sin dirección.
+- **Fondos**: pergamino con grano de fibra sutil; nunca fotos.
 - **Animación**: micro y con propósito — impacto al confirmar acciones
   destructivas, tiradas de dado con física breve, transiciones de 150-250ms.
   `prefers-reduced-motion` siempre respetado. Prohibido: parallax gratuito,
@@ -220,7 +218,7 @@ Decisiones nuevas que este plan añade:
 | IA (F4) | **Claude API** vía Vercel AI SDK | Crónicas narrativas y RAG de reglas sobre nuestra propia base. Se decide en F4, no antes. |
 | PWA | **Serwist** en F6 (manifest básico antes) | Offline real solo cuando el contenido esté estable. |
 | Hosting | **Vercel** (app) + Supabase (datos) | Deploy por push, preview deployments, cero DevOps. |
-| Temas | Tokens CSS custom properties, **dark por defecto** | Ya funciona así; el tema claro es variante de tokens, no rediseño. |
+| Temas | Tokens CSS custom properties, **claro por defecto** (pergamino) | La dirección «Pergamino y sangre» es light-first; el tema oscuro es una variante cálida de tokens, no un rediseño. |
 
 ---
 
@@ -301,10 +299,13 @@ sincronización offline multi-dispositivo · modo proyector para finales.
    bilingüe a nivel de dato desde ya.
 8. **Fase 1 incluye las 29 razas completas** (transcripción del Compendio
    + revisión del admin), no un subconjunto.
+9. **Dirección de arte: «Pergamino y sangre»** (light-first). Elegida sobre
+   «Estadio de medianoche» y «Cabalvision». Especificada en
+   `DESIGN_SYSTEM.md`.
 
-## Cuestiones abiertas (necesitan tu decisión)
+## Cuestiones abiertas
 
-1. **Dirección de arte**: maquetas de las 3 candidatas («Estadio de
-   medianoche», «Pergamino y sangre», «Cabalvision») publicadas para
-   comparar sobre una pantalla real. Pendiente de elegir una — bloquea el
-   inicio visual de F1, no la transcripción de razas.
+Ninguna bloqueante. La fase de diseño queda cerrada; la Fase 1 puede
+arrancar. Detalles a concretar sobre la marcha en F1: elección final de
+librería de iconos, y modelo de datos exacto para razas/posiciones/estrellas
+(se diseña al empezar la transcripción).
