@@ -2,12 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/server/db/prisma";
 
 export default async function AdminHome() {
-  const [skillCount, traitCount, raceCount, positionCount, weatherCount, kickoffCount, injuryCount] =
+  const [skillCount, traitCount, raceCount, positionCount, starCount, weatherCount, kickoffCount, injuryCount] =
     await Promise.all([
       prisma.masterSkill.count(),
       prisma.masterTrait.count(),
       prisma.masterRace.count(),
       prisma.masterPosition.count(),
+      prisma.masterStarPlayer.count(),
       prisma.masterWeatherEntry.count(),
       prisma.masterKickoffEntry.count(),
       prisma.masterInjuryEntry.count(),
@@ -18,6 +19,7 @@ export default async function AdminHome() {
     { href: "/admin/traits", label: "Rasgos", count: traitCount },
     { href: "/admin/races", label: "Razas", count: raceCount },
     { href: "/admin/races", label: "Puestos", count: positionCount },
+    { href: "/admin/stars", label: "Jugadores Estrella", count: starCount },
     { href: "/admin/tables", label: "Clima", count: weatherCount },
     { href: "/admin/tables", label: "Patada Inicial", count: kickoffCount },
     { href: "/admin/tables", label: "Lesiones D16", count: injuryCount },
