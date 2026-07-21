@@ -16,6 +16,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/traits" className="text-zinc-500 hover:text-foreground">
           Rasgos
         </Link>
+        <Link href="/admin/races" className="text-zinc-500 hover:text-foreground">
+          Razas
+        </Link>
         <Link href="/admin/tables" className="text-zinc-500 hover:text-foreground">
           Tablas
         </Link>
