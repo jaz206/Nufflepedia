@@ -1,5 +1,12 @@
 # Modelo de datos
 
+## Usuario (`User`)
+
+Identidad = `authId` (UID de Supabase Auth). El primer usuario que se
+registra se auto-promociona a `ADMIN` (`requireUser.ts`/`auth/callback`).
+`avatarUrl` es opcional — solo lo rellena Google OAuth (`user_metadata`);
+el login por enlace mágico no trae foto y no la borra si ya existía.
+
 ## Atributos (5)
 `MA` (Movimiento), `ST` (Fuerza), `AG+` (Agilidad, "para superar"),
 `PA+` (Pase, "para superar"), `AV+` (Armadura, "para superar").
@@ -54,10 +61,88 @@ jugador, si no hay rivales marcando la casilla. Los jugadores con el rasgo
 `src/rules-engine/data/traits.ts`. Pendiente de implementar como acción en
 el motor de partido (M4); de momento solo está documentada como regla.
 
-## Jugadores Estrella y "Plays For"
+## Jugadores Estrella y "Plays For" — IMPLEMENTADO (Fase 1-2)
 
-Cada Jugador Estrella tendrá un campo `playsFor: string[]` con las claves de
-roster/liga que pueden contratarlo, más su coste y su set de rasgos propios
-(ver `TraitCategory: "JugadorEstrella"` en `traits.ts` para rasgos ya
-portados como Incorporeal, Blind Rage, Tasty Morsel). El catálogo completo
-de estrellas se porta en M2.
+`MasterStarPlayer.leagues: String[]` + `playsForAny: Boolean`. La regla de
+elegibilidad (`star.playsForAny || star.leagues ∩ race.leagues ≠ ∅`) se
+resuelve en `equipos/[id]/page.tsx` filtrando en JS tras traer ambas listas
+(los conjuntos son pequeños, no hace falta `hasSome` de Prisma). El Mercado
+de Estrellas de El Cuartel (`/equipos/[id]`) permite fichar hasta 2 copias
+del mismo Jugador Estrella; sus habilidades (`skillKeys`, nombres display
+igual que `startingSkillKeys`) se resuelven y persisten como
+`PlayerSkillAssignment` con `source: STAR_PLAYER`.
+
+## `ManagedPlayer`: roster normal vs. Jugador Estrella (2026-07-22)
+
+`positionKey` y `starKey` son ambos `String?`, mutuamente excluyentes —
+exactamente uno debe estar relleno:
+- **Jugador de roster**: `positionKey` = id de `MasterPosition` (no hay
+  campo `key` de texto en posiciones, a diferencia de habilidades/rasgos,
+  así que el `id` hace ese papel). `starKey` es `null`.
+- **Jugador Estrella fichado**: `starKey` = `MasterStarPlayer.key`.
+  `positionKey` es `null`.
+
+Migración `20260722130445_managed_player_star_key`.
+
+## Nombres de jugador acordes a la raza real del puesto (2026-07-22)
+
+## Plantilla-copia aislada por competición (`CompetitionPlayer`) — 2026-07-23
+
+Cuando un usuario se inscribe en una liga o torneo (`joinCompetition`), la
+plantilla real (`ManagedPlayer` + `PlayerSkillAssignment`) se clona en una
+copia de trabajo (`CompetitionPlayer` + `CompetitionPlayerSkill`) ligada
+solo a esa `CompetitionEntry` (`competiciones/rosterSnapshot.ts`). La
+tesorería sobrante del equipo también se clona en
+`CompetitionEntry.snapshotTreasury`. A partir de ahí:
+
+- Los resultados de partido (`MatchScorer.playerId`, `MatchInjury.attackerPlayerId`/
+  `victimPlayerId`) apuntan a `CompetitionPlayer`, **no** a `ManagedPlayer`.
+- Las subidas de nivel dentro de una competición (`levelUpCompetitionPlayer`
+  en `competiciones/rosterActions.ts`) actualizan la copia.
+- Fichar una Estrella "solo para esta competición" (`hireCompetitionStar`)
+  descuenta de `snapshotTreasury`, nunca de `ManagedTeam.treasury`.
+
+La plantilla real en El Cuartel **nunca se entera** de nada de esto — solo
+cambia si el usuario la edita a mano ahí. Motivo: el usuario quería poder
+reutilizar la misma plantilla base en varias ligas/torneos sin que el
+progreso de uno contaminara a los demás. Inscripciones creadas antes de que
+existiera este mecanismo se rellenan solas (clonado perezoso) la primera vez
+que se abre la ficha de esa competición tras la migración
+(`competition_player_snapshot`).
+
+## Mejora de atributo (subida de nivel) — 2026-07-23
+
+`ManagedPlayer`/`CompetitionPlayer` tienen 5 contadores
+(`maIncreases`/`stIncreases`/`agIncreases`/`paIncreases`/`avIncreases`) que
+registran cuántas veces se ha comprado esa mejora con PE. MO/FU/AR suman
+directamente; AG/PA **restan** al número "para superar" (mínimo 1) — ver
+`src/lib/playerStats.ts::effectiveStats`. La app no simula la tirada de 1D8
+oficial para decidir qué atributo mejora al azar (no se tiene esa tabla
+verificada con certeza): el entrenador tira físicamente y la app solo
+registra el resultado ya decidido, igual que con los resultados de partido.
+
+## Calendario e Incentivos de competición — 2026-07-23
+
+- `CompetitionFixture`: calendario fijo de una liga, generado a doble vuelta
+  al marcarla "en curso" (`src/lib/roundRobinSchedule.ts`). Cada jornada
+  tiene `scheduledAt` + `proposedByEntryId`/`confirmedAt` (una parte
+  propone, la otra confirma, evita desacuerdos de zona horaria).
+- `MasterInducement`/`MasterSpecialRule`: catálogo de referencia (contenido
+  oficial, no lógica de compra todavía) transcrito del reglamento — ver
+  §11.3 de `MASTER_PLAN.md`.
+
+## Nombres de jugador acordes a la raza real del puesto (2026-07-22)
+
+Al fichar (`addPlayer` en `equipos/actions.ts`), el nombre se genera con
+`generatePlayerName(position.playerTags, existingNames)`
+(`src/rules-engine/data/playerNames.ts`) — deriva la familia de nombres del
+tag más específico de `playerTags` (ej. `["Troll", "Grandullón"]` → nombres
+de trol), no de la raza del equipo. Esto importa porque un mismo roster
+puede mezclar razas reales: un Grandullón "Troll" en un equipo de Orcos, un
+"Vampiro" en un equipo de Vampiros (mientras la línea es Humana/No Muerta),
+etc. — ver `Name_players.md` del prototipo anterior, que documentaba esta
+correspondencia puesto→raza. Nunca repite un nombre ya usado en el equipo
+(sufijo " (n)" si el fondo se agota). `getPositionFlavorLabel()` devuelve
+una etiqueta visual solo para los casos "notables" (Grandullones,
+sub-criaturas de No Muertos) — los puestos normales de la raza base del
+equipo no se marcan.

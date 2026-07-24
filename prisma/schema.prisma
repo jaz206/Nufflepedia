@@ -31,6 +31,8 @@ model User {
   authId      String   @unique
   email       String   @unique
   displayName String
+  /// Foto de perfil (viene de Google cuando el login es OAuth). Null en login por email.
+  avatarUrl   String?
   role        UserRole @default(USER)
   createdAt   DateTime @default(now())
 
@@ -38,6 +40,7 @@ model User {
   commissionedComps  Competition[]      @relation("Commissioner")
   competitionEntries CompetitionEntry[]
   sentInvitations    Invitation[]       @relation("InvitedBy")
+  editedMatchReports MatchReport[]      @relation("MatchReportEditor")
 }
 
 /// Estado de un jugador entre partidos (roster). Los estados transitorios de
@@ -87,9 +90,24 @@ model ManagedPlayer {
   number      Int
   customName  String
   /// Clave de la posición dentro del roster oficial (catálogo estático).
-  positionKey String
+  /// Null si el jugador es un Jugador Estrella fichado (ver starKey).
+  positionKey String?
+  /// Clave de MasterStarPlayer si este jugador es una Estrella fichada del
+  /// mercado; null para jugadores normales del roster (ver positionKey).
+  /// Exactamente uno de los dos debe estar relleno.
+  starKey     String?
   spp         Int                @default(0)
   status      RosterPlayerStatus @default(ACTIVE)
+  /// Mejoras de atributo compradas con PE (subida de nivel). El signo del
+  /// efecto depende de la característica: MA/FU/AR suman, AG/PA restan al
+  /// número "para superar" (ver MasterPosition.ag). El jugador tira el dado
+  /// físicamente según la tabla del reglamento y aquí solo se registra el
+  /// resultado ya decidido.
+  maIncreases Int                @default(0)
+  stIncreases Int                @default(0)
+  agIncreases Int                @default(0)
+  paIncreases Int                @default(0)
+  avIncreases Int                @default(0)
   createdAt   DateTime           @default(now())
 
   skills PlayerSkillAssignment[]
@@ -137,22 +155,49 @@ model Competition {
   rulesConfig    Json                  @default("{}")
   createdAt      DateTime              @default(now())
 
+  /// Solo aplica si format = TOURNAMENT.
+  hasGroupStage Boolean @default(false)
+  groupCount    Int?
+  /// [{ name: string, entryIds: string[] }] — asignación de grupos, si hasGroupStage.
+  groups        Json    @default("[]")
+  /// [{ round: number, matches: [{ id, homeEntryId, awayEntryId, homeScore, awayScore, winnerEntryId }] }]
+  bracket       Json    @default("[]")
+  /// Solo aplica si format = TOURNAMENT: "GROUPS" mientras se juega la fase de
+  /// grupos, "KNOCKOUT" una vez generado el cuadro. Null en formato Liguilla.
+  phase         String?
+
   entries      CompetitionEntry[]
   invitations  Invitation[]
   matchReports MatchReport[]
+  fixtures     CompetitionFixture[]
 
   @@index([commissionerId])
 }
 
 model CompetitionEntry {
-  id            String      @id @default(uuid())
+  id            String       @id @default(uuid())
   competitionId String
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  managedTeamId String
-  managedTeam   ManagedTeam @relation(fields: [managedTeamId], references: [id])
+  competition   Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  /// Nullable a propósito: si el dueño disuelve el equipo real en El
+  /// Cuartel, esta inscripción no debe romperse (la copia de trabajo en
+  /// CompetitionPlayer ya es autosuficiente) — la referencia simplemente
+  /// se queda en null. `teamName`/`rosterKey` de abajo son la copia
+  /// congelada que sobrevive a esa desaparición.
+  managedTeamId String?
+  managedTeam   ManagedTeam? @relation(fields: [managedTeamId], references: [id], onDelete: SetNull)
+  /// Nombre y raza del equipo EN EL MOMENTO de inscribirse — copia
+  /// congelada, igual que la plantilla/tesorería (ver CompetitionPlayer).
+  teamName      String
+  rosterKey     String
   ownerId       String
-  owner         User        @relation(fields: [ownerId], references: [id])
+  owner         User         @relation(fields: [ownerId], references: [id])
   division      String?
+
+  /// Tesorería de esta inscripción, clonada de la plantilla base al
+  /// inscribirse: los fichajes "solo para esta competición" descuentan de
+  /// aquí, nunca de la tesorería real del equipo (ver CompetitionPlayer).
+  snapshotTreasury Int @default(0)
+  players          CompetitionPlayer[]
 
   played     Int @default(0)
   won        Int @default(0)
@@ -167,8 +212,63 @@ model CompetitionEntry {
   homeMatches MatchReport[] @relation("HomeEntry")
   awayMatches MatchReport[] @relation("AwayEntry")
 
+  scores           MatchScorer[]
+  fixturesHome     CompetitionFixture[] @relation("FixtureHome")
+  fixturesAway     CompetitionFixture[] @relation("FixtureAway")
+  fixturesProposed CompetitionFixture[] @relation("FixtureProposedBy")
+
+  injuriesCaused   MatchInjury[] @relation("InjuryAttackerEntry")
+  injuriesReceived MatchInjury[] @relation("InjuryVictimEntry")
+  inducementPurchases MatchInducementPurchase[]
+
   @@unique([competitionId, managedTeamId])
   @@index([competitionId])
+}
+
+/**
+ * Copia de trabajo de un jugador, aislada a UNA inscripción. Se genera
+ * clonando la plantilla real (jugadores + habilidades) al inscribirse en
+ * cualquier competición (liga o torneo): las PE ganadas, subidas de nivel,
+ * lesiones y fichajes de esa competición viven aquí y nunca tocan la
+ * plantilla base en El Cuartel (ManagedPlayer). `sourcePlayerId` es una
+ * referencia informativa al ManagedPlayer original, si vino de un clonado
+ * (null para jugadores fichados directamente durante la competición).
+ */
+model CompetitionPlayer {
+  id             String             @id @default(uuid())
+  entryId        String
+  entry          CompetitionEntry   @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  sourcePlayerId String?
+  number         Int
+  customName     String
+  positionKey    String?
+  starKey        String?
+  spp            Int                @default(0)
+  status         RosterPlayerStatus @default(ACTIVE)
+  maIncreases    Int                @default(0)
+  stIncreases    Int                @default(0)
+  agIncreases    Int                @default(0)
+  paIncreases    Int                @default(0)
+  avIncreases    Int                @default(0)
+  createdAt      DateTime           @default(now())
+
+  skills CompetitionPlayerSkill[]
+  scores MatchScorer[]
+
+  injuriesCaused   MatchInjury[] @relation("InjuryAttackerCompPlayer")
+  injuriesReceived MatchInjury[] @relation("InjuryVictimCompPlayer")
+
+  @@index([entryId])
+}
+
+model CompetitionPlayerSkill {
+  id       String            @id @default(uuid())
+  playerId String
+  player   CompetitionPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  skillKey String
+  source   SkillSource
+
+  @@unique([playerId, skillKey])
 }
 
 model MatchReport {
@@ -188,7 +288,123 @@ model MatchReport {
   article   String?
   playedAt  DateTime @default(now())
 
+  /// De dónde vino este resultado — determina si se puede editar el
+  /// marcador después (BRACKET no, por ahora: el cuadro guarda su propio
+  /// marcador/ganador en Competition.bracket y no está sincronizado).
+  source        MatchSource @default(GROUP)
+  /// Rastro de auditoría: quién corrigió el marcador por última vez, y cuándo.
+  editedAt      DateTime?
+  editedById    String?
+  editedBy      User?       @relation("MatchReportEditor", fields: [editedById], references: [id])
+
+  scorers    MatchScorer[]
+  injuries   MatchInjury[]
+  inducements MatchInducementPurchase[]
+  fixture    CompetitionFixture?
+
   @@index([competitionId])
+}
+
+enum MatchSource {
+  FIXTURE
+  GROUP
+  BRACKET
+}
+
+/**
+ * Calendario fijo de una Liguilla: se genera al marcarla "en curso" (ida y
+ * vuelta round-robin — con 2 equipos ya da 2 jornadas, local/visitante
+ * invertido). Sustituye al registro libre de resultados: cada partido
+ * jugado enlaza aquí con su MatchReport.
+ */
+model CompetitionFixture {
+  id            String      @id @default(uuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round         Int
+  homeEntryId   String
+  homeEntry     CompetitionEntry @relation("FixtureHome", fields: [homeEntryId], references: [id])
+  awayEntryId   String
+  awayEntry     CompetitionEntry @relation("FixtureAway", fields: [awayEntryId], references: [id])
+  /// Fecha/hora propuesta para jugarlo (opcional — la pone quien quiera).
+  scheduledAt      DateTime?
+  /// Quién propuso la fecha actual — para pedirle confirmación al rival.
+  proposedByEntryId String?
+  proposedByEntry   CompetitionEntry? @relation("FixtureProposedBy", fields: [proposedByEntryId], references: [id])
+  /// Se rellena cuando el otro equipo (o el comisario) confirma la fecha propuesta.
+  confirmedAt       DateTime?
+  matchReportId String?      @unique
+  matchReport   MatchReport? @relation(fields: [matchReportId], references: [id])
+  createdAt     DateTime     @default(now())
+
+  @@index([competitionId])
+}
+
+/// Un touchdown anotado, opcionalmente atribuido a un jugador real (alimenta su SPP).
+model MatchScorer {
+  id            String        @id @default(uuid())
+  matchReportId String
+  matchReport   MatchReport   @relation(fields: [matchReportId], references: [id], onDelete: Cascade)
+  entryId       String
+  entry         CompetitionEntry @relation(fields: [entryId], references: [id])
+  playerId      String?
+  player        CompetitionPlayer? @relation(fields: [playerId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([matchReportId])
+}
+
+/**
+ * Una lesión del partido: quién la causó y quién la sufrió (equipo
+ * siempre; jugador concreto opcional), y el resultado en la Tabla de
+ * Lesiones (MasterInjuryEntry.code) si se conoce. Alimenta el SPP del
+ * agresor y, si el resultado es grave, el estado del jugador lesionado.
+ */
+model MatchInjury {
+  id               String       @id @default(uuid())
+  matchReportId    String
+  matchReport      MatchReport  @relation(fields: [matchReportId], references: [id], onDelete: Cascade)
+  attackerEntryId  String
+  attackerEntry    CompetitionEntry @relation("InjuryAttackerEntry", fields: [attackerEntryId], references: [id])
+  attackerPlayerId String?
+  attackerPlayer   CompetitionPlayer? @relation("InjuryAttackerCompPlayer", fields: [attackerPlayerId], references: [id])
+  victimEntryId    String
+  victimEntry      CompetitionEntry @relation("InjuryVictimEntry", fields: [victimEntryId], references: [id])
+  victimPlayerId   String?
+  victimPlayer     CompetitionPlayer? @relation("InjuryVictimCompPlayer", fields: [victimPlayerId], references: [id])
+  /// Código de MasterInjuryEntry (p.ej. "MNG", "DEAD") si se sabe el resultado exacto.
+  injuryCode       String?
+  /// Si injuryCode.permanentStatLoss: qué característica se reduce (MA/ST/AG/PA/AV).
+  /// Opcional — si no se indica, el jugador queda marcado como lesionado pero
+  /// su ficha de atributos no cambia.
+  statLoss         String?
+  createdAt        DateTime     @default(now())
+
+  @@index([matchReportId])
+}
+
+/**
+ * Un Incentivo comprado por un equipo para un partido concreto, descontado
+ * de la tesorería clonada de esa inscripción (CompetitionEntry.snapshotTreasury).
+ * Solo cubre Incentivos de coste fijo (MasterInducement.cost != null) — los
+ * de "precio variable" (mercenarios, Jugador Estrella, árbitro, mago, etc.)
+ * necesitan su propio flujo y no se compran aquí todavía.
+ */
+model MatchInducementPurchase {
+  id            String      @id @default(uuid())
+  matchReportId String
+  matchReport   MatchReport @relation(fields: [matchReportId], references: [id], onDelete: Cascade)
+  entryId       String
+  entry         CompetitionEntry @relation(fields: [entryId], references: [id])
+  /// MasterInducement.key
+  inducementKey String
+  quantity      Int
+  /// Coste total pagado (cost del Incentivo × quantity), congelado en el
+  /// momento de la compra por si el admin cambia el precio después.
+  costPaid      Int
+  createdAt     DateTime    @default(now())
+
+  @@index([matchReportId])
 }
 
 enum InvitationStatus {
@@ -326,6 +542,32 @@ model MasterLevelUpConfig {
   updatedAt     DateTime @updatedAt
 }
 
+/// Incentivos comunes (contrataciones previas al partido). Coste en M.O.,
+/// null = precio variable (depende del Incentivo elegido, ver `effect`).
+model MasterInducement {
+  id           String   @id @default(uuid())
+  key          String   @unique
+  name         String
+  cost         Int?
+  maxCount     Int
+  /// Regla especial de equipo requerida (MasterSpecialRule.key en texto), o
+  /// null si está disponible para cualquier equipo.
+  restriction  String?
+  effect       String
+  sortOrder    Int      @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+/// Reglas especiales de equipo (Brutos Brutales, Elegidos de..., etc.) con
+/// su texto completo — MasterRace.specialRules hoy solo guarda el nombre.
+model MasterSpecialRule {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String
+  updatedAt   DateTime @updatedAt
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Razas / plantillas oficiales (Fase 1). Ver docs/RACES_DATA_MODEL.md.
 // ─────────────────────────────────────────────────────────────────────────
@@ -394,4 +636,37 @@ model MasterStarPlayer {
   specialRuleText String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Secuencia de Partido (chuleta editable). Ver src/rules-engine/data/
+// matchSequence.ts para la semilla original y docs/MASTER_PLAN.md.
+// ─────────────────────────────────────────────────────────────────────────
+
+model MasterMatchSection {
+  id        String   @id @default(uuid())
+  /// "pre-partido" | "durante-el-partido" | "post-partido"
+  key       String   @unique
+  title     String
+  intro     String
+  /// Nota final de la sección (p.ej. el cambio de roles al descanso). Opcional.
+  note      String?
+  sortOrder Int      @default(0)
+  steps     MasterMatchStep[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterMatchStep {
+  id          String             @id @default(uuid())
+  sectionId   String
+  section     MasterMatchSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sortOrder   Int
+  title       String
+  description String
+  /// Notación de dados si aplica (p.ej. "2D6"). Opcional.
+  dice        String?
+  updatedAt   DateTime           @updatedAt
+
+  @@index([sectionId])
 }

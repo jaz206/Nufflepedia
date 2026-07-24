@@ -25,6 +25,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/tables" className="text-zinc-500 hover:text-foreground">
           Tablas
         </Link>
+        <Link href="/admin/partido" className="text-zinc-500 hover:text-foreground">
+          Secuencia de Partido
+        </Link>
       </div>
       {children}
     </div>

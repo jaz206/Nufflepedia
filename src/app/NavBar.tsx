@@ -22,6 +22,11 @@ export default async function NavBar() {
         <Link href="/nufflepedia" className="text-zinc-500 hover:text-foreground">
           Nufflepedia
         </Link>
+        {dbUser && (
+          <Link href="/dashboard" className="text-zinc-500 hover:text-foreground">
+            Dashboard
+          </Link>
+        )}
         {dbUser?.role === "ADMIN" && (
           <Link href="/admin" className="text-zinc-500 hover:text-foreground">
             Admin

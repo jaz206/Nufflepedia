@@ -11,6 +11,9 @@ import { PRAYERS_TO_NUFFLE_TABLE } from "../src/rules-engine/data/tables/prayers
 import { INJURY_TABLE_D16 } from "../src/rules-engine/data/tables/injury";
 import { SPP_VALUES, BRUTOS_BRUTALES_OVERRIDES } from "../src/rules-engine/data/tables/spp";
 import { LEVEL_UP_SPP_COST, LEVEL_UP_TV_IMPACT_GP } from "../src/rules-engine/data/tables/levelUp";
+import { MATCH_SEQUENCE } from "../src/rules-engine/data/matchSequence";
+import { INDUCEMENTS_TABLE } from "../src/rules-engine/data/tables/inducements";
+import { SPECIAL_RULES_TABLE } from "../src/rules-engine/data/tables/specialRules";
 
 const prisma = new PrismaClient();
 
@@ -190,6 +193,58 @@ async function main() {
       where: { configKey: row.configKey },
       update: row,
       create: row,
+    });
+  }
+
+  console.log(`Sembrando Incentivos (${INDUCEMENTS_TABLE.length} filas)...`);
+  for (const [i, entry] of INDUCEMENTS_TABLE.entries()) {
+    await prisma.masterInducement.upsert({
+      where: { key: entry.key },
+      update: {
+        name: entry.name,
+        cost: entry.cost,
+        maxCount: entry.maxCount,
+        restriction: entry.restriction,
+        effect: entry.effect,
+        sortOrder: i,
+      },
+      create: {
+        key: entry.key,
+        name: entry.name,
+        cost: entry.cost,
+        maxCount: entry.maxCount,
+        restriction: entry.restriction,
+        effect: entry.effect,
+        sortOrder: i,
+      },
+    });
+  }
+
+  console.log(`Sembrando Reglas especiales (${SPECIAL_RULES_TABLE.length} filas)...`);
+  for (const entry of SPECIAL_RULES_TABLE) {
+    await prisma.masterSpecialRule.upsert({
+      where: { key: entry.key },
+      update: { name: entry.name, description: entry.description },
+      create: { key: entry.key, name: entry.name, description: entry.description },
+    });
+  }
+
+  console.log(`Sembrando Secuencia de Partido (${MATCH_SEQUENCE.length} secciones)...`);
+  for (const [i, section] of MATCH_SEQUENCE.entries()) {
+    const dbSection = await prisma.masterMatchSection.upsert({
+      where: { key: section.key },
+      update: { title: section.title, intro: section.intro, note: section.note ?? null, sortOrder: i },
+      create: { key: section.key, title: section.title, intro: section.intro, note: section.note ?? null, sortOrder: i },
+    });
+    await prisma.masterMatchStep.deleteMany({ where: { sectionId: dbSection.id } });
+    await prisma.masterMatchStep.createMany({
+      data: section.steps.map((s) => ({
+        sectionId: dbSection.id,
+        sortOrder: s.order,
+        title: s.title,
+        description: s.description,
+        dice: s.dice ?? null,
+      })),
     });
   }
 

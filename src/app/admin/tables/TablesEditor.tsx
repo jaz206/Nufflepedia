@@ -8,6 +8,8 @@ import {
   updatePrayerEntry,
   updateSppValue,
   updateWeatherEntry,
+  updateInducement,
+  updateSpecialRule,
 } from "./actions";
 
 interface WeatherRow {
@@ -53,6 +55,21 @@ interface LevelUpRow {
   sppCost: number;
   tvImpactMinGp: number | null;
   tvImpactMaxGp: number | null;
+}
+interface InducementRow {
+  id: string;
+  key: string;
+  name: string;
+  cost: number | null;
+  maxCount: number;
+  restriction: string | null;
+  effect: string;
+}
+interface SpecialRuleRow {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
 }
 
 function RollLabel({ min, max }: { min: number; max: number }) {
@@ -365,6 +382,123 @@ function LevelUpSection({ rows }: { rows: LevelUpRow[] }) {
   );
 }
 
+function InducementSection({ rows }: { rows: InducementRow[] }) {
+  const [items, setItems] = useState(rows);
+  const [isPending, startTransition] = useTransition();
+
+  function save(id: string, patch: Partial<InducementRow>) {
+    const row = items.find((r) => r.id === id)!;
+    const next = { ...row, ...patch };
+    startTransition(async () => {
+      await updateInducement(id, {
+        name: next.name,
+        cost: next.cost,
+        maxCount: next.maxCount,
+        restriction: next.restriction,
+        effect: next.effect,
+      });
+      setItems(items.map((r) => (r.id === id ? next : r)));
+    });
+  }
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">Incentivos</h2>
+      <div className="space-y-3">
+        {items.map((row) => (
+          <div key={row.id} className="rounded border border-zinc-200 dark:border-zinc-800 p-3 space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                className="input flex-1 min-w-[200px] font-medium"
+                defaultValue={row.name}
+                disabled={isPending}
+                onBlur={(e) => e.target.value !== row.name && save(row.id, { name: e.target.value })}
+              />
+              <span className="text-xs text-zinc-400">Máx.:</span>
+              <input
+                type="number"
+                className="input w-16"
+                defaultValue={row.maxCount}
+                disabled={isPending}
+                onBlur={(e) => {
+                  const v = Number(e.target.value);
+                  if (v !== row.maxCount) save(row.id, { maxCount: v });
+                }}
+              />
+              <span className="text-xs text-zinc-400">Coste (M.O., vacío = variable):</span>
+              <input
+                type="number"
+                className="input w-28"
+                placeholder="variable"
+                defaultValue={row.cost ?? ""}
+                disabled={isPending}
+                onBlur={(e) => {
+                  const v = e.target.value === "" ? null : Number(e.target.value);
+                  if (v !== row.cost) save(row.id, { cost: v });
+                }}
+              />
+              <span className="text-xs text-zinc-400">Restricción:</span>
+              <input
+                className="input w-52"
+                placeholder="cualquier equipo"
+                defaultValue={row.restriction ?? ""}
+                disabled={isPending}
+                onBlur={(e) => {
+                  const v = e.target.value === "" ? null : e.target.value;
+                  if (v !== row.restriction) save(row.id, { restriction: v });
+                }}
+              />
+            </div>
+            <textarea
+              className="input w-full"
+              rows={2}
+              defaultValue={row.effect}
+              disabled={isPending}
+              onBlur={(e) => e.target.value !== row.effect && save(row.id, { effect: e.target.value })}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SpecialRuleSection({ rows }: { rows: SpecialRuleRow[] }) {
+  const [items, setItems] = useState(rows);
+  const [isPending, startTransition] = useTransition();
+
+  function save(id: string, name: string, description: string) {
+    startTransition(async () => {
+      await updateSpecialRule(id, { name, description });
+      setItems(items.map((r) => (r.id === id ? { ...r, name, description } : r)));
+    });
+  }
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">Reglas especiales de equipo</h2>
+      <div className="space-y-2">
+        {items.map((row) => (
+          <div key={row.id} className="flex items-start gap-3">
+            <input
+              className="input flex-1"
+              defaultValue={row.name}
+              onBlur={(e) => e.target.value !== row.name && save(row.id, e.target.value, row.description)}
+            />
+            <textarea
+              className="input flex-[2]"
+              rows={2}
+              defaultValue={row.description}
+              disabled={isPending}
+              onBlur={(e) => e.target.value !== row.description && save(row.id, row.name, e.target.value)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function TablesEditor({
   weather,
   kickoff,
@@ -372,6 +506,8 @@ export default function TablesEditor({
   injury,
   spp,
   levelUp,
+  inducements,
+  specialRules,
 }: {
   weather: WeatherRow[];
   kickoff: KickoffRow[];
@@ -379,6 +515,8 @@ export default function TablesEditor({
   injury: InjuryRow[];
   spp: SppRow[];
   levelUp: LevelUpRow[];
+  inducements: InducementRow[];
+  specialRules: SpecialRuleRow[];
 }) {
   return (
     <div className="space-y-10">
@@ -392,6 +530,8 @@ export default function TablesEditor({
       <InjurySection rows={injury} />
       <SppSection rows={spp} />
       <LevelUpSection rows={levelUp} />
+      <InducementSection rows={inducements} />
+      <SpecialRuleSection rows={specialRules} />
     </div>
   );
 }

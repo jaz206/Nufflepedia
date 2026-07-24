@@ -25,6 +25,14 @@ const levelUpSchema = z.object({
   tvImpactMinGp: z.number().int().min(0).nullable(),
   tvImpactMaxGp: z.number().int().min(0).nullable(),
 });
+const inducementSchema = z.object({
+  name: z.string().min(1),
+  cost: z.number().int().min(0).nullable(),
+  maxCount: z.number().int().min(0),
+  restriction: z.string().nullable(),
+  effect: z.string().min(1),
+});
+const specialRuleSchema = z.object({ name: z.string().min(1), description: z.string().min(1) });
 
 export async function updateWeatherEntry(id: string, input: z.infer<typeof weatherSchema>) {
   await requireAdmin();
@@ -64,6 +72,20 @@ export async function updateSppValue(id: string, input: z.infer<typeof sppSchema
 export async function updateLevelUpConfig(id: string, input: z.infer<typeof levelUpSchema>) {
   await requireAdmin();
   await prisma.masterLevelUpConfig.update({ where: { id }, data: levelUpSchema.parse(input) });
+  revalidatePath("/admin/tables");
+  revalidatePath("/nufflepedia");
+}
+
+export async function updateInducement(id: string, input: z.infer<typeof inducementSchema>) {
+  await requireAdmin();
+  await prisma.masterInducement.update({ where: { id }, data: inducementSchema.parse(input) });
+  revalidatePath("/admin/tables");
+  revalidatePath("/nufflepedia");
+}
+
+export async function updateSpecialRule(id: string, input: z.infer<typeof specialRuleSchema>) {
+  await requireAdmin();
+  await prisma.masterSpecialRule.update({ where: { id }, data: specialRuleSchema.parse(input) });
   revalidatePath("/admin/tables");
   revalidatePath("/nufflepedia");
 }

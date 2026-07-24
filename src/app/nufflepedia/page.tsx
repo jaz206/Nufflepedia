@@ -3,7 +3,7 @@ import { prisma } from "@/server/db/prisma";
 import NufflepediaBrowser from "./NufflepediaBrowser";
 
 export default async function NufflepediaPage() {
-  const [skills, traits, raceCount, starCount, weather, kickoff, prayers, injury] = await Promise.all([
+  const [skills, traits, raceCount, starCount, weather, kickoff, prayers, injury, inducements, specialRules] = await Promise.all([
     prisma.masterSkill.findMany({ orderBy: { name: "asc" } }),
     prisma.masterTrait.findMany({ orderBy: { name: "asc" } }),
     prisma.masterRace.count(),
@@ -12,6 +12,8 @@ export default async function NufflepediaPage() {
     prisma.masterKickoffEntry.findMany({ orderBy: { roll: "asc" } }),
     prisma.masterPrayerEntry.findMany({ orderBy: { roll: "asc" } }),
     prisma.masterInjuryEntry.findMany({ orderBy: { minRoll: "asc" } }),
+    prisma.masterInducement.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.masterSpecialRule.findMany({ orderBy: { name: "asc" } }),
   ]);
 
   return (
@@ -33,6 +35,12 @@ export default async function NufflepediaPage() {
             className="inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
           >
             Ver los {starCount} Jugadores Estrella →
+          </Link>
+          <Link
+            href="/nufflepedia/partido"
+            className="inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
+          >
+            Secuencia de Partido →
           </Link>
         </div>
       </div>
@@ -97,6 +105,38 @@ export default async function NufflepediaPage() {
                     {i.permanentStatLoss && " · Pérdida de atributo"}
                     {i.missesNextGame && !i.isDeath && " · Falta el siguiente partido"}
                   </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="sm:col-span-2">
+            <h3 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">Incentivos</h3>
+            <p className="mb-3 text-xs text-zinc-500">
+              Se adquieren gastando M.O. antes del partido (tesorería en ligas, presupuesto de fichajes en partidos
+              equilibrados/exhibición).
+            </p>
+            <ul className="space-y-2 text-sm">
+              {inducements.map((ind) => (
+                <li key={ind.id} className="flex gap-3">
+                  <span className="w-28 shrink-0 font-mono text-xs text-zinc-400">
+                    0-{ind.maxCount} · {ind.cost !== null ? `${ind.cost.toLocaleString("es-ES")} MO` : "variable"}
+                  </span>
+                  <span>
+                    <strong>{ind.name}</strong>
+                    {ind.restriction && <span className="text-zinc-400"> ({ind.restriction})</span>} — {ind.effect}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="sm:col-span-2">
+            <h3 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+              Reglas especiales de equipo
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {specialRules.map((r) => (
+                <li key={r.id}>
+                  <strong>{r.name}</strong> — {r.description}
                 </li>
               ))}
             </ul>

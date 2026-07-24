@@ -3,6 +3,11 @@
 > ⚠️ SUPERADO: la planificación por fases vive ahora en
 > [MASTER_PLAN.md](MASTER_PLAN.md) (§3 Roadmap). Este archivo se conserva
 > como registro histórico del estado de los hitos M0-M1 iniciales.
+>
+> Estado real a 2026-07-23: **M0, M1, M2 y M3 completados** (M2 = Fase 2 en
+> MASTER_PLAN.md "El Cuartel"; M3 = Fase 3 "La Arena" — ligas/torneos,
+> calendario, subida de nivel, plantilla-copia por competición, ver §11.3
+> de MASTER_PLAN.md). M4 (Asistente de partido en vivo + IA) es el siguiente.
 
 ## M0 — Cimientos (hecho)
 - Next.js + TypeScript estricto + Tailwind, ESLint limpio.

@@ -1,14 +1,19 @@
 # Modelo de datos: Razas, Puestos y Jugadores Estrella (Fase 1)
 
-> PROPUESTA — pendiente de validar antes de migrar. Basado en la estructura
-> real de las plantillas del reglamento oficial 2025 (BB2025_crap_v1.pdf).
+> IMPLEMENTADO (2026-07-21) y en uso activo desde Fase 2 (El Cuartel,
+> 2026-07-22): 29 razas / 155 puestos / 68 Jugadores Estrella transcritos y
+> sembrados; el esquema de abajo es el real de `prisma/schema.prisma`, no
+> una propuesta. Basado en la estructura real de las plantillas del
+> reglamento oficial 2025 (BB2025_crap_v1.pdf).
 
 ## Qué dice el manual (estructura real de una plantilla)
 
 A nivel de **equipo/raza** (ej. Humanos, pág. 172):
 - Ligas a las que pertenece: `Clásica del Viejo Mundo` → determina qué
   Jugadores Estrella puede fichar ("juega para").
-- Reglas especiales: `Capitán del Equipo`, `Brutos Brutales`, `Elegidos de…`.
+- Reglas especiales: `Capitán del Equipo`, `Brutos Brutales`, `Elegidos de…`
+  (nombres sueltos en `MasterRace.specialRules`; el texto completo de cada
+  una vive en `MasterSpecialRule` desde 2026-07-23 — ver `DATA_MODEL.md`).
 - Segundas oportunidades (rerolls): coste (`50 000 MO`) y límite (`0-8`).
 - Apotecario: Sí / No.
 
@@ -113,18 +118,21 @@ model MasterStarPlayer {
 5. **Categorías primarias/secundarias reutilizan `SkillCategory`.** Ya existe;
    son las mismas 6 letras A/F/G/M/P/T del manual.
 
-## Qué desbloquea
+## Qué desbloqueó (estado real)
 
-- **Fase 1 (ahora):** Nufflepedia gana secciones de **Razas** y **Estrellas**
-  (fichas navegables + buscador), y el admin gana pestañas para editarlas
-  igual que habilidades/rasgos.
-- **Fase 2 (después):** el constructor de equipos usa `MasterPosition`
-  (límites, costes, cálculo de TV) y el mercado de estrellas usa la eligibilidad
-  por ligas.
+- **Fase 1** ✅: Nufflepedia tiene secciones de **Razas** y **Estrellas**
+  (fichas navegables + buscador en `/nufflepedia/razas` y `/nufflepedia/estrellas`),
+  y `/admin/races` + `/admin/stars` para editarlas igual que habilidades/rasgos.
+- **Fase 2** ✅ (2026-07-22): El Cuartel (`/equipos`) usa `MasterPosition`
+  para límites/costes/roster, y el Mercado de Estrellas de cada equipo usa
+  la elegibilidad por ligas (`playsForAny || leagues ∩ race.leagues`).
+- **`playerTags` resultó tener un segundo uso no previsto aquí**: además de
+  Animosidad/Odio, sirve para derivar la raza REAL de cada puesto a efectos
+  de nombre aleatorio y de la insignia "es de otra raza" — ver
+  `docs/DATA_MODEL.md` § Nombres de jugador y `src/rules-engine/data/playerNames.ts`.
 
-## Pendiente de decidir contigo
+## Decisiones que estaban pendientes (ya resueltas)
 
-- ¿Incluimos `tier`? El reglamento no lo trae explícito; la NAF sí publica
-  tiers. Lo dejo opcional (`Int?`) y lo rellenamos si quieres, o lo omitimos.
-- Orden de transcripción: propongo hacer **1 raza completa primero** (Humanos)
-  para que valides que la ficha se ve y edita bien, y luego las 28 restantes.
+- **`tier`**: se incluyó (`Int?`), relleno para las 29 razas.
+- Transcripción: se hizo raza a raza empezando por Humanos, luego el resto;
+  el proceso se documentó en la memoria de sesión, no hace falta repetirlo.

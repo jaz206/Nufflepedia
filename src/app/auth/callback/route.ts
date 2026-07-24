@@ -18,13 +18,20 @@ export async function GET(request: Request) {
 
     if (!error && data.user?.email) {
       const existingCount = await prisma.user.count();
+      const meta = data.user.user_metadata ?? {};
       await prisma.user.upsert({
         where: { authId: data.user.id },
-        update: { email: data.user.email },
+        update: {
+          email: data.user.email,
+          // Solo pisa el nombre/avatar si Google los trae; el login por
+          // email no tiene metadata y no debe borrar lo que ya hubiera.
+          ...(meta.avatar_url ? { avatarUrl: meta.avatar_url } : {}),
+        },
         create: {
           authId: data.user.id,
           email: data.user.email,
-          displayName: data.user.email.split("@")[0],
+          displayName: meta.full_name ?? meta.name ?? data.user.email.split("@")[0],
+          avatarUrl: meta.avatar_url ?? null,
           role: existingCount === 0 ? "ADMIN" : "USER",
         },
       });

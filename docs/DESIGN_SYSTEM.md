@@ -133,10 +133,11 @@ Todo componente interactivo define y verifica visualmente:
 - **Button**: primario (sangre, texto Spectral), secundario (borde
   `--border-strong`, texto tinta), fantasma (texto), peligro (danger + icono
   papelera). Altura 36/40px.
-- **SkillPill**: nombre de habilidad como píldora bordeada; hover/focus abre
-  tooltip con la descripción completa (ES o EN según idioma). Élite lleva
-  punto oro. Es EL componente puente entre módulos (rosters, equipos,
-  partido).
+- **SkillPill**: ✅ HECHO (`src/components/SkillPill.tsx` +
+  `SkillPillList.tsx`). Nombre de habilidad como píldora bordeada; hover/
+  focus abre tooltip con la descripción completa. Élite lleva punto oro.
+  En uso en El Cuartel y el Heraldo de Nuffle. Pendiente: variante EN
+  (hoy siempre muestra la descripción en español).
 - **StatBlock**: fila MA/ST/AG/PA/AV en JetBrains Mono, "+" pegado al número,
   sobre `--surface-2` con filetes verticales. Variante compacta (tabla) y
   grande (ficha).
@@ -150,9 +151,15 @@ Todo componente interactivo define y verifica visualmente:
 - **Wizard**: pasos numerados en Cinzel con estado (hecho/actual/pendiente),
   botón atrás siempre, resumen antes de confirmar. Post-partido y creación de
   equipo.
-- **Toast**: esquina inferior, autodismiss 4.5s, ok/danger, cola máx. 3.
-- **EmptyState**: viñeta grabada + frase con sabor + acción primaria ("Aún no
-  tienes equipo. Recluta a tus primeros desgraciados →").
+- **Toast**: pendiente de construir (aún no hay ninguna acción que lo necesite;
+  los errores de Server Action se muestran inline con `useOptimistic` + un
+  `<p>` de error, ver El Cuartel).
+- **EmptyState**: ✅ HECHO (`src/components/EmptyState.tsx`), sin viñeta
+  ilustrada todavía (solo texto + acción). En uso en Dashboard, Equipos,
+  Competiciones/Pizarra/Arena (placeholders).
+- **Modal**: ✅ HECHO, no estaba en el inventario original
+  (`src/components/Modal.tsx`) — overlay + panel, cierra con Escape/clic
+  fuera/botón. En uso en el Buscador Rápido del Dashboard.
 
 ## 7. Movimiento
 
