@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:races": "tsx prisma/seedRaces.ts",
-    "db:seed:stars": "tsx prisma/seedStars.ts"
+    "db:seed:stars": "tsx prisma/seedStars.ts",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
