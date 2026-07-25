@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Modal from "@/components/Modal";
+import SkillPill from "@/components/SkillPill";
+import { buildReferenceMatcher, tokenizeReferences } from "@/lib/crossReference";
 
 interface Entry {
   key: string;
   name: string;
-  type: "Habilidad" | "Rasgo";
+  type: "Habilidad" | "Rasgo" | "Estado";
   category: string;
   description: string;
 }
@@ -20,6 +22,17 @@ export default function QuickSearch({ entries }: { entries: Entry[] }) {
     if (!q) return [];
     return entries.filter((e) => e.name.toLowerCase().includes(q)).slice(0, 8);
   }, [entries, query]);
+
+  const matcher = useMemo(() => buildReferenceMatcher(entries.map((e) => e.name)), [entries]);
+  const nameToEntry = useMemo(() => {
+    const map = new Map<string, Entry>();
+    for (const e of entries) if (!map.has(e.name.toLowerCase())) map.set(e.name.toLowerCase(), e);
+    return map;
+  }, [entries]);
+  const descriptionTokens = useMemo(
+    () => (selected ? tokenizeReferences(selected.description, matcher, selected.name) : []),
+    [selected, matcher]
+  );
 
   return (
     <div>
@@ -78,7 +91,14 @@ export default function QuickSearch({ entries }: { entries: Entry[] }) {
               </span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: "var(--ink-2)" }}>
-              {selected.description}
+              {descriptionTokens.map((t, i) => {
+                if (t.type === "text") return <span key={i}>{t.value}</span>;
+                const ref = nameToEntry.get(t.value.toLowerCase());
+                if (!ref) return <span key={i}>{t.value}</span>;
+                return (
+                  <SkillPill key={i} label={t.value} description={ref.description} onClick={() => setSelected(ref)} />
+                );
+              })}
             </p>
           </div>
         )}

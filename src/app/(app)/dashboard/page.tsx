@@ -20,7 +20,7 @@ const STATUS_TOKEN: Record<string, string> = {
 export default async function DashboardPage() {
   const dbUser = await requireUser();
 
-  const [teams, entries, skills, traits, races, stars, allEntries] = await Promise.all([
+  const [teams, entries, skills, traits, races, stars, allEntries, playerStates] = await Promise.all([
     prisma.managedTeam.findMany({
       where: { ownerId: dbUser.id },
       orderBy: { createdAt: "desc" },
@@ -40,6 +40,7 @@ export default async function DashboardPage() {
     prisma.competitionEntry.findMany({
       select: { id: true, managedTeamId: true, teamName: true, tdFor: true, casFor: true, won: true, played: true },
     }),
+    prisma.masterPlayerState.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
 
   const raceNameByKey = Object.fromEntries(races.map((r) => [r.key, r.name]));
@@ -80,6 +81,13 @@ export default async function DashboardPage() {
       type: "Rasgo" as const,
       category: t.category,
       description: t.description,
+    })),
+    ...playerStates.map((s) => ({
+      key: s.key,
+      name: s.name,
+      type: "Estado" as const,
+      category: "Estado de un jugador",
+      description: s.description,
     })),
   ];
 

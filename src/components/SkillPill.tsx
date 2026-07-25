@@ -12,10 +12,13 @@ export default function SkillPill({
   label,
   description,
   elite = false,
+  onClick,
 }: {
   label: string;
   description?: string;
   elite?: boolean;
+  /** Si se indica, la píldora también es clicable (ej. saltar a la ficha de esa habilidad/rasgo/estado). */
+  onClick?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const tooltipId = useId();
@@ -29,12 +32,13 @@ export default function SkillPill({
           borderColor: "var(--border-strong)",
           color: "var(--ink-2)",
           background: "var(--surface-2)",
-          cursor: description ? "help" : "default",
+          cursor: onClick ? "pointer" : description ? "help" : "default",
         }}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
+        onClick={onClick}
         aria-describedby={description ? tooltipId : undefined}
       >
         {elite && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--gold)" }} />}
