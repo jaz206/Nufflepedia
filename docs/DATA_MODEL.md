@@ -131,6 +131,54 @@ registra el resultado ya decidido, igual que con los resultados de partido.
   oficial, no lógica de compra todavía) transcrito del reglamento — ver
   §11.3 de `MASTER_PLAN.md`.
 
+## Instantánea congelada de identidad por inscripción (2026-07-24)
+
+`CompetitionEntry.teamName`/`rosterKey` son copias congeladas del nombre y
+la raza del equipo en el momento de inscribirse (además de `snapshotTreasury`
+y la plantilla-copia ya descritos arriba). `managedTeamId` pasó de
+obligatorio a `String?` con `onDelete: SetNull`. Motivo: disolver un equipo
+(`deleteTeam`) fallaba con violación de clave foránea si ese equipo había
+estado alguna vez inscrito en una competición — la copia de plantilla ya
+existía, pero la *identidad* (nombre/raza) todavía se leía en vivo desde
+`ManagedTeam`. Ahora toda lectura de nombre/raza en una competición usa
+`entry.teamName`/`entry.rosterKey` directamente, nunca
+`entry.managedTeam.name`. Migraciones `entry_team_snapshot_nullable_team_ref`
+→ backfill → `entry_team_snapshot_required`.
+
+## Varios equipos propios en una misma competición (2026-07-24)
+
+`CompetitionEntry.ownerId` nunca fue único por competición — un mismo
+usuario puede tener varias inscripciones en la misma liga/torneo (caso
+real: torneo casero con varios equipos de la familia gestionados desde una
+cuenta). `/competiciones/[id]/page.tsx` calcula `myEntries` (lista, no un
+único "mi inscripción") y `myRosters` (una ficha de "Mi plantilla" por
+inscripción propia, cacheada por `rosterKey` para no repetir consultas si
+dos equipos propios comparten raza).
+
+## Compra de Incentivos de coste fijo (`MatchInducementPurchase`) — 2026-07-24
+
+Antes de registrar un resultado, cada lado puede comprar Incentivos de
+`MasterInducement.cost` fijo (no null), descontando de
+`CompetitionEntry.snapshotTreasury`. Cada compra queda como una fila en
+`MatchInducementPurchase` (equipo, incentivo, coste pagado). Los Incentivos
+de coste variable (mercenarios, Jugador Estrella prestado, árbitro, mago)
+siguen sin implementar — quedan como contenido de catálogo únicamente.
+
+## Auditoría de edición de resultados (`MatchReport.source`/`editedAt`) — 2026-07-24
+
+`MatchReport.source` (`FIXTURE`/`GROUP`/`BRACKET`) distingue de qué parte
+del flujo vino un resultado. `editedAt`/`editedById` (+ relación
+`MatchReportEditor`) registran si un comisario corrigió un resultado ya
+registrado vía `editMatchResult`, y quién.
+
+## Lesión permanente: qué atributo baja (`MatchInjury.statLoss`) — 2026-07-24
+
+Al registrar una lesión con secuela permanente, se pregunta qué atributo se
+ve afectado (mismo patrón "consulta, no simulación" que la subida de
+nivel — ver `ARCHITECTURE.md`) y se guarda en `MatchInjury.statLoss`. La
+app no decide esto sola: no hay tabla oficial de asignación
+lesión→atributo verificada con certeza en el repo.
+
 ## Nombres de jugador acordes a la raza real del puesto (2026-07-22)
 
 Al fichar (`addPlayer` en `equipos/actions.ts`), el nombre se genera con

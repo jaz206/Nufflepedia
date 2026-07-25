@@ -466,6 +466,67 @@ Resumen operativo de una sesión larga, para no tener que re-derivarlo:
   de prueba ya registrados en la liga "PRUEBA I" (el marcador y las
   estadísticas de equipo no se tocaron).
 
+### 11.4 Incentivos de verdad, realismo y estabilidad de La Arena — completados (2026-07-24/25)
+
+Resumen operativo de una sesión larga de correcciones y ampliaciones sobre
+Fase 3, más el primer despliegue público:
+
+- **Compra real de Incentivos**: el catálogo de §11.3 (solo consulta) se
+  conectó al registro de resultados — cada equipo puede comprar Incentivos
+  de coste fijo (`MasterInducement.cost`) antes de un partido, descontando
+  de `snapshotTreasury` de esa competición; queda registrado en
+  `MatchInducementPurchase`. Los Incentivos de coste variable (mercenarios,
+  Jugadores Estrella prestados, árbitro, mago) siguen sin implementar — el
+  esquema de coste fijo era el caso simple y de más valor inmediato.
+- **Crónica más realista**: `src/lib/matchArticle.ts` ahora consulta la
+  tabla de anotadores de la temporada para dar contexto ("su tercer
+  touchdown esta temporada") en vez de solo narrar el partido aislado.
+- **Lesión permanente = elegir qué característica baja**: al marcar una
+  lesión con secuela permanente, la app pregunta qué atributo se ve
+  afectado (mismo patrón "consulta, no simulación" que la subida de nivel)
+  — nuevo campo `MatchInjury.statLoss`, migración `injury_stat_loss`.
+- **Varios equipos propios en una misma competición**: un usuario puede
+  inscribir más de un equipo suyo en la misma liga/torneo (caso real:
+  torneo casero con varios equipos de la familia, una sola cuenta). Afectó
+  a toda la lectura de "mi equipo" en `/competiciones/[id]`, que pasó de
+  singular a lista (`myEntries`/`myRosters`).
+- **Bug real corregido — no se podía disolver un equipo inscrito**:
+  `deleteTeam` fallaba con violación de clave foránea si el equipo había
+  estado alguna vez en una competición. Se congelan `teamName`/`rosterKey`
+  como columnas propias de `CompetitionEntry` (ya no dependen de leer
+  `ManagedTeam` en vivo) y `managedTeamId` pasa a ser opcional con
+  `ON DELETE SET NULL` — ver `DATA_MODEL.md`.
+- **Bug real corregido — "ese equipo ya está inscrito" en falso**: el
+  desplegable de "unirme con este equipo" guardaba en `useState` el primer
+  equipo disponible solo al montar el componente; tras cada inscripción la
+  lista se acortaba pero el estado no se resincronizaba. Se sustituyó por
+  un valor derivado (`effectiveJoinTeamId`) que valida el estado guardado
+  contra la lista actual en cada render.
+- **Rediseño de la fase de grupos**: el desplegable libre Local/Visitante
+  para registrar resultados de grupo no dejaba ver ni acceder con claridad
+  al segundo grupo. Sustituido por `GroupMatchList.tsx`: lista de todos los
+  enfrentamientos posibles agrupada visualmente por grupo, un botón de
+  registrar por pareja (ya jugada = solo marcador, no se puede duplicar).
+- **Validación de número de grupos vs. equipos inscritos**: el formulario
+  de creación clampa el número de grupos al máximo de equipos permitido, y
+  `startTournament` rechaza arrancar si al final se inscribieron menos
+  equipos de los que hacen falta para ese número de grupos.
+- **Bug real corregido — claves duplicadas en "Mis ligas"**: con varios
+  equipos propios en la misma competición, la consulta generaba una fila
+  por equipo en vez de una por competición (React avisaba de claves
+  repetidas). Deduplicado por id de competición.
+- **Primer despliegue público**: repositorio nuevo
+  [`github.com/jaz206/Nufflepedia`](https://github.com/jaz206/Nufflepedia)
+  (el proyecto viejo `BloodBowlManager`/Vite se deja intacto como archivo,
+  con su propio Vercel sin tocar) conectado a un proyecto de Vercel nuevo
+  con despliegue automático en cada push. Variables de entorno de
+  producción = las mismas de Supabase que se usan en desarrollo (todavía
+  **una sola base de datos** para local y producción — pendiente decidir
+  si se separa). Corregido: la URL "Site URL" de Supabase Auth apuntaba a
+  `localhost:3000`, así que el login con Google en producción redirigía de
+  vuelta a local — se actualizó a la URL real de Vercel y se añadieron
+  ambas (`localhost` y producción) a "Redirect URLs".
+
 ## Cuestiones abiertas
 
 Ninguna bloqueante. Detalles a concretar sobre la marcha: elección final de

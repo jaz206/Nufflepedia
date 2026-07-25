@@ -51,10 +51,16 @@ interface InjuryRow {
   key: number;
   attackerSide: "home" | "away";
   attackerPlayerId: string | null;
-  victimSide: "home" | "away";
   victimPlayerId: string | null;
   injuryCode: string | null;
   statLoss: StatLoss | null;
+}
+
+/** Una lesión siempre la causa un jugador contra el equipo rival — nunca
+ * contra un compañero de su propio equipo, así que el lado de la víctima no
+ * es una elección: es siempre el otro equipo del partido. */
+function opposite(side: "home" | "away"): "home" | "away" {
+  return side === "home" ? "away" : "home";
 }
 
 function ScorerRow({
@@ -211,7 +217,6 @@ export default function MatchDetailsForm({
         key: Date.now() + Math.random(),
         attackerSide: "home",
         attackerPlayerId: null,
-        victimSide: "away",
         victimPlayerId: null,
         injuryCode: null,
         statLoss: null,
@@ -244,7 +249,7 @@ export default function MatchDetailsForm({
     const injuryInputs: InjuryInput[] = injuries.map((r) => ({
       attackerEntryId: sideOf(r.attackerSide).entryId,
       attackerPlayerId: r.attackerPlayerId,
-      victimEntryId: sideOf(r.victimSide).entryId,
+      victimEntryId: sideOf(opposite(r.attackerSide)).entryId,
       victimPlayerId: r.victimPlayerId,
       injuryCode: r.injuryCode,
       statLoss: r.statLoss,
@@ -361,7 +366,13 @@ export default function MatchDetailsForm({
                     className="input w-full"
                     style={{ padding: "3px 6px", fontSize: "12px" }}
                     value={row.attackerSide}
-                    onChange={(e) => updateInjuryRow(row.key, { attackerSide: e.target.value as "home" | "away", attackerPlayerId: null })}
+                    onChange={(e) =>
+                      updateInjuryRow(row.key, {
+                        attackerSide: e.target.value as "home" | "away",
+                        attackerPlayerId: null,
+                        victimPlayerId: null,
+                      })
+                    }
                   >
                     <option value="home">{home.teamName}</option>
                     <option value="away">{away.teamName}</option>
@@ -382,17 +393,8 @@ export default function MatchDetailsForm({
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[10px]" style={{ color: "var(--ink-3)" }}>
-                    Recibida por
+                    Recibida por ({sideOf(opposite(row.attackerSide)).teamName})
                   </label>
-                  <select
-                    className="input w-full"
-                    style={{ padding: "3px 6px", fontSize: "12px" }}
-                    value={row.victimSide}
-                    onChange={(e) => updateInjuryRow(row.key, { victimSide: e.target.value as "home" | "away", victimPlayerId: null })}
-                  >
-                    <option value="home">{home.teamName}</option>
-                    <option value="away">{away.teamName}</option>
-                  </select>
                   <select
                     className="input w-full"
                     style={{ padding: "3px 6px", fontSize: "12px" }}
@@ -400,7 +402,7 @@ export default function MatchDetailsForm({
                     onChange={(e) => updateInjuryRow(row.key, { victimPlayerId: e.target.value || null })}
                   >
                     <option value="">Sin asignar</option>
-                    {sideOf(row.victimSide).roster.map((p) => (
+                    {sideOf(opposite(row.attackerSide)).roster.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
                       </option>

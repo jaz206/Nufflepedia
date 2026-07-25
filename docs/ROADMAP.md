@@ -4,10 +4,12 @@
 > [MASTER_PLAN.md](MASTER_PLAN.md) (§3 Roadmap). Este archivo se conserva
 > como registro histórico del estado de los hitos M0-M1 iniciales.
 >
-> Estado real a 2026-07-23: **M0, M1, M2 y M3 completados** (M2 = Fase 2 en
-> MASTER_PLAN.md "El Cuartel"; M3 = Fase 3 "La Arena" — ligas/torneos,
-> calendario, subida de nivel, plantilla-copia por competición, ver §11.3
-> de MASTER_PLAN.md). M4 (Asistente de partido en vivo + IA) es el siguiente.
+> Estado real a 2026-07-25: **M0, M1, M2 y M3 completados**, más una ronda de
+> correcciones/ampliaciones sobre M3 (compra real de Incentivos, multi-equipo
+> por cuenta, varios bugs reales corregidos — ver §11.4 de MASTER_PLAN.md) y
+> **primer despliegue público**: [nufflepedia.vercel.app](https://nufflepedia.vercel.app),
+> repo [`github.com/jaz206/Nufflepedia`](https://github.com/jaz206/Nufflepedia).
+> M4 (Asistente de partido en vivo + IA) es el siguiente.
 
 ## M0 — Cimientos (hecho)
 - Next.js + TypeScript estricto + Tailwind, ESLint limpio.

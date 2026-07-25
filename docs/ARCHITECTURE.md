@@ -118,9 +118,33 @@ más simple de razonar (una competición = una copia congelada en el momento
 de inscribirse, sin lógica de fusión) aunque cueste algo más de espacio en
 BD — irrelevante al volumen de datos actual.
 
+## Despliegue (2026-07-24)
+
+- **Repositorio**: [`github.com/jaz206/Nufflepedia`](https://github.com/jaz206/Nufflepedia)
+  — repo nuevo y separado del proyecto viejo (`BloodBowlManager`, Vite/Firebase,
+  dejado intacto como archivo con su propio Vercel sin tocar). Se eligió repo
+  nuevo + proyecto de Vercel nuevo en vez de sustituir el contenido del repo
+  viejo, para no perder su historial y no arriesgar el despliegue existente.
+- **Vercel**: proyecto nuevo importado directamente desde ese repo, detecta
+  Next.js automáticamente, deploy en cada push a `master`.
+- **Variables de entorno de producción**: las mismas del Supabase de
+  desarrollo (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `DIRECT_URL`) — **todavía una única
+  base de datos** para local y producción. `GEMINI_API_KEY` reservada, sin
+  usar en código todavía.
+- **Supabase Auth — gotcha de despliegue**: el campo "Site URL" (Authentication
+  → URL Configuration) determina a dónde vuelve el login OAuth si la URL de
+  retorno pedida no coincide exactamente con la lista de "Redirect URLs" — no
+  da error, simplemente redirige ahí en silencio. Estaba puesto a
+  `localhost:3000` desde el desarrollo local, así que el login con Google en
+  producción devolvía al usuario a su propio localhost. Hay que mantener
+  tanto la URL de producción como `localhost:3000` en "Redirect URLs", y
+  "Site URL" apuntando a la URL de producción real.
+
 ## Decisiones pendientes de tu parte (no técnicas)
 
-- Crear un proyecto en [supabase.com](https://supabase.com) (gratis) y pegar
-  las claves en `.env.local` (plantilla en `.env.example`).
+- Decidir si se separa la base de datos de producción de la de desarrollo
+  (hoy comparten el mismo proyecto Supabase — cualquier prueba en local es
+  visible en la web real).
 - Todo lo demás (stack, estructura, modelo de datos) ya está decidido para
   que puedas centrarte en decir "esto me gusta" / "esto no".

@@ -44,13 +44,13 @@ export default async function DashboardPage() {
 
   const raceNameByKey = Object.fromEntries(races.map((r) => [r.key, r.name]));
 
-  const teamTotals = new Map<string, { name: string; td: number; cas: number; won: number; played: number }>();
+  const teamTotals = new Map<string, { key: string; name: string; td: number; cas: number; won: number; played: number }>();
   for (const e of allEntries) {
     // Agrupa por managedTeamId cuando el equipo real sigue existiendo (para
     // fusionar varias inscripciones del mismo equipo en distintas
     // competiciones); si ya se disolvió, cada inscripción cuenta aparte.
     const key = e.managedTeamId ?? e.id;
-    const t = teamTotals.get(key) ?? { name: e.teamName, td: 0, cas: 0, won: 0, played: 0 };
+    const t = teamTotals.get(key) ?? { key, name: e.teamName, td: 0, cas: 0, won: 0, played: 0 };
     t.td += e.tdFor;
     t.cas += e.casFor;
     t.won += e.won;
@@ -159,7 +159,12 @@ export default async function DashboardPage() {
                 style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
               >
                 <div>
-                  <p className="font-semibold">{entry.competition.name}</p>
+                  <p className="font-semibold">
+                    {entry.competition.name}
+                    <span className="ml-2 font-normal" style={{ color: "var(--ink-3)" }}>
+                      ({entry.teamName})
+                    </span>
+                  </p>
                   <p className="text-sm" style={{ color: "var(--ink-3)" }}>
                     {entry.won}V — {entry.drawn}E — {entry.lost}D · {entry.points} pts
                   </p>
@@ -193,7 +198,7 @@ export default async function DashboardPage() {
               </p>
               <ol className="space-y-1.5 text-sm">
                 {topScorers.map((t, i) => (
-                  <li key={t.name} className="flex items-center justify-between">
+                  <li key={t.key} className="flex items-center justify-between">
                     <span>
                       <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
                         {i + 1}.
@@ -213,7 +218,7 @@ export default async function DashboardPage() {
               </p>
               <ol className="space-y-1.5 text-sm">
                 {topBashers.map((t, i) => (
-                  <li key={t.name} className="flex items-center justify-between">
+                  <li key={t.key} className="flex items-center justify-between">
                     <span>
                       <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
                         {i + 1}.
