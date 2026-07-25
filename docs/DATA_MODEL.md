@@ -131,6 +131,19 @@ registra el resultado ya decidido, igual que con los resultados de partido.
   oficial, no lógica de compra todavía) transcrito del reglamento — ver
   §11.3 de `MASTER_PLAN.md`.
 
+## Estados de un jugador durante el partido (`MasterPlayerState`) — 2026-07-25
+
+Los 4 estados oficiales (En pie, Distraído, Tumbado boca arriba, Aturdido —
+Compendio 2025 pág. 38-39) no son ni habilidades ni rasgos, así que tienen su
+propia tabla de referencia (mismo patrón que Clima/Patada Inicial: seed en
+`src/rules-engine/data/tables/playerStates.ts` → `MasterPlayerState`,
+editable en `/admin/tables`, visible en `/nufflepedia/tablas`). `sortOrder`
+fija el orden oficial de la lista en vez de alfabético. `PlayerStatus` en
+`rules-engine/types.ts` ganó el valor `DISTRACTED` que le faltaba — sigue
+siendo solo un tipo de código sin persistencia propia hasta que exista el
+Match Assistant (Fase 4), igual que el resto de estados "de partido en
+curso" descritos más abajo.
+
 ## Instantánea congelada de identidad por inscripción (2026-07-24)
 
 `CompetitionEntry.teamName`/`rosterKey` son copias congeladas del nombre y

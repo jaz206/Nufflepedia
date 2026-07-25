@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   SKILL_CATEGORY_LABELS,
   SKILL_CATEGORY_VALUES,
@@ -8,6 +8,7 @@ import {
   TRAIT_CATEGORY_VALUES,
 } from "@/lib/categoryLabels";
 import { buildMarkdownExport, type ExportSkill, type ExportTrait } from "@/lib/markdownExport";
+import { buildReferenceMatcher, tokenizeReferences } from "@/lib/crossReference";
 
 function matches(term: string, ...fields: (string | null | undefined)[]) {
   const needle = term.trim().toLowerCase();
@@ -28,6 +29,49 @@ function downloadMarkdown(content: string) {
   URL.revokeObjectURL(url);
 }
 
+type RefKind = "skill" | "trait";
+
+function refId(kind: RefKind, key: string) {
+  return `ref-${kind}-${key}`;
+}
+
+/** Descripción con las menciones a otras habilidades/rasgos convertidas en
+ * enlaces que saltan (y resaltan brevemente) a su propia ficha. */
+function LinkedDescription({
+  text,
+  matcher,
+  ownName,
+  nameToRef,
+  onJump,
+}: {
+  text: string;
+  matcher: RegExp | null;
+  ownName: string;
+  nameToRef: Map<string, { kind: RefKind; key: string }>;
+  onJump: (kind: RefKind, key: string) => void;
+}) {
+  const tokens = useMemo(() => tokenizeReferences(text, matcher, ownName), [text, matcher, ownName]);
+  return (
+    <>
+      {tokens.map((t, i) => {
+        if (t.type === "text") return <span key={i}>{t.value}</span>;
+        const ref = nameToRef.get(t.value.toLowerCase());
+        if (!ref) return <span key={i}>{t.value}</span>;
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onJump(ref.kind, ref.key)}
+            className="underline decoration-dotted underline-offset-2 hover:decoration-solid"
+          >
+            {t.value}
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 export default function NufflepediaBrowser({
   skills,
   traits,
@@ -36,6 +80,34 @@ export default function NufflepediaBrowser({
   traits: ExportTrait[];
 }) {
   const [query, setQuery] = useState("");
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const flashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const matcher = useMemo(
+    () => buildReferenceMatcher([...skills.map((s) => s.name), ...traits.map((t) => t.name)]),
+    [skills, traits]
+  );
+  const nameToRef = useMemo(() => {
+    const map = new Map<string, { kind: RefKind; key: string }>();
+    for (const s of skills) map.set(s.name.toLowerCase(), { kind: "skill", key: s.key });
+    for (const t of traits) if (!map.has(t.name.toLowerCase())) map.set(t.name.toLowerCase(), { kind: "trait", key: t.key });
+    return map;
+  }, [skills, traits]);
+
+  function jumpTo(kind: RefKind, key: string) {
+    const id = refId(kind, key);
+    setQuery("");
+    // Espera a que el DOM se actualice (la búsqueda pudo estar filtrando la
+    // ficha destino) antes de desplazarse hasta ella.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      })
+    );
+    if (flashTimeout.current) clearTimeout(flashTimeout.current);
+    setFlashId(id);
+    flashTimeout.current = setTimeout(() => setFlashId(null), 1600);
+  }
 
   const filteredSkills = useMemo(
     () => skills.filter((s) => matches(query, s.name, s.englishName, s.description, s.key)),
@@ -85,7 +157,15 @@ export default function NufflepediaBrowser({
                 </h3>
                 <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                   {items.map((skill) => (
-                    <li key={skill.key} className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-3">
+                    <li
+                      key={skill.key}
+                      id={refId("skill", skill.key)}
+                      className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 transition-colors duration-500"
+                      style={{
+                        borderColor: flashId === refId("skill", skill.key) ? "var(--gold, #b8860b)" : undefined,
+                        background: flashId === refId("skill", skill.key) ? "color-mix(in srgb, var(--gold, #b8860b) 15%, transparent)" : undefined,
+                      }}
+                    >
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="font-medium">{skill.name}</span>
                         {skill.isElite && (
@@ -94,7 +174,9 @@ export default function NufflepediaBrowser({
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-zinc-500">{skill.description}</p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        <LinkedDescription text={skill.description} matcher={matcher} ownName={skill.name} nameToRef={nameToRef} onJump={jumpTo} />
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -121,9 +203,19 @@ export default function NufflepediaBrowser({
                 </h3>
                 <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                   {items.map((trait) => (
-                    <li key={trait.key} className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-3">
+                    <li
+                      key={trait.key}
+                      id={refId("trait", trait.key)}
+                      className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 transition-colors duration-500"
+                      style={{
+                        borderColor: flashId === refId("trait", trait.key) ? "var(--gold, #b8860b)" : undefined,
+                        background: flashId === refId("trait", trait.key) ? "color-mix(in srgb, var(--gold, #b8860b) 15%, transparent)" : undefined,
+                      }}
+                    >
                       <span className="font-medium">{trait.name}</span>
-                      <p className="mt-1 text-sm text-zinc-500">{trait.description}</p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        <LinkedDescription text={trait.description} matcher={matcher} ownName={trait.name} nameToRef={nameToRef} onJump={jumpTo} />
+                      </p>
                     </li>
                   ))}
                 </ul>

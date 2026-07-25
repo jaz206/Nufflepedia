@@ -568,6 +568,19 @@ model MasterSpecialRule {
   updatedAt   DateTime @updatedAt
 }
 
+/// Los 4 estados de un jugador durante el partido (En pie, Distraído,
+/// Tumbado boca arriba, Aturdido) — no son ni habilidades ni rasgos, así que
+/// tienen su propia tabla de referencia. sortOrder fija el orden oficial en
+/// vez de alfabético.
+model MasterPlayerState {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Razas / plantillas oficiales (Fase 1). Ver docs/RACES_DATA_MODEL.md.
 // ─────────────────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/nufflepedia", label: "La Biblioteca" },
+  { href: "/nufflepedia/tablas", label: "Tablas" },
   { href: "/equipos", label: "Equipos" },
   { href: "/competiciones", label: "Competiciones" },
   { href: "/pizarra", label: "Pizarra" },
@@ -21,7 +22,12 @@ export default function Sidebar() {
       style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
     >
       {NAV_ITEMS.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        // Resalta solo la entrada más específica que coincide (evita que
+        // "La Biblioteca" y "Tablas" se marquen ambas activas a la vez en
+        // /nufflepedia/tablas, ya que una es prefijo de la otra).
+        const matches = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+        const mostSpecific = NAV_ITEMS.filter((i) => matches(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
+        const active = matches(item.href) && mostSpecific?.href === item.href;
         return (
           <Link
             key={item.href}

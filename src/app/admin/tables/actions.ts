@@ -33,6 +33,7 @@ const inducementSchema = z.object({
   effect: z.string().min(1),
 });
 const specialRuleSchema = z.object({ name: z.string().min(1), description: z.string().min(1) });
+const playerStateSchema = z.object({ name: z.string().min(1), description: z.string().min(1) });
 
 export async function updateWeatherEntry(id: string, input: z.infer<typeof weatherSchema>) {
   await requireAdmin();
@@ -88,4 +89,12 @@ export async function updateSpecialRule(id: string, input: z.infer<typeof specia
   await prisma.masterSpecialRule.update({ where: { id }, data: specialRuleSchema.parse(input) });
   revalidatePath("/admin/tables");
   revalidatePath("/nufflepedia");
+}
+
+export async function updatePlayerState(id: string, input: z.infer<typeof playerStateSchema>) {
+  await requireAdmin();
+  await prisma.masterPlayerState.update({ where: { id }, data: playerStateSchema.parse(input) });
+  revalidatePath("/admin/tables");
+  revalidatePath("/nufflepedia");
+  revalidatePath("/nufflepedia/tablas");
 }

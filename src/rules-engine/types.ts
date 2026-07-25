@@ -58,6 +58,7 @@ export interface AttributeBlock {
  */
 export type PlayerStatus =
   | "STANDING" // En pie
+  | "DISTRACTED" // Distraído (pierde su zona de defensa; ver rules-engine/data/tables/playerStates.ts)
   | "PRONE" // Tumbado
   | "STUNNED" // Aturdido
   | "KO" // Inconsciente (recupera con 4+ en cada patada inicial)

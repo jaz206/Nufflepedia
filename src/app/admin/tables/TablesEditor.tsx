@@ -10,6 +10,7 @@ import {
   updateWeatherEntry,
   updateInducement,
   updateSpecialRule,
+  updatePlayerState,
 } from "./actions";
 
 interface WeatherRow {
@@ -70,6 +71,13 @@ interface SpecialRuleRow {
   key: string;
   name: string;
   description: string;
+}
+interface PlayerStateRow {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  sortOrder: number;
 }
 
 function RollLabel({ min, max }: { min: number; max: number }) {
@@ -499,6 +507,42 @@ function SpecialRuleSection({ rows }: { rows: SpecialRuleRow[] }) {
   );
 }
 
+function PlayerStateSection({ rows }: { rows: PlayerStateRow[] }) {
+  const [items, setItems] = useState(rows);
+  const [isPending, startTransition] = useTransition();
+
+  function save(id: string, name: string, description: string) {
+    startTransition(async () => {
+      await updatePlayerState(id, { name, description });
+      setItems(items.map((r) => (r.id === id ? { ...r, name, description } : r)));
+    });
+  }
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">Estados de un jugador</h2>
+      <div className="space-y-2">
+        {items.map((row) => (
+          <div key={row.id} className="flex items-start gap-3">
+            <input
+              className="input w-40 shrink-0"
+              defaultValue={row.name}
+              onBlur={(e) => e.target.value !== row.name && save(row.id, e.target.value, row.description)}
+            />
+            <textarea
+              className="input flex-1"
+              rows={2}
+              defaultValue={row.description}
+              disabled={isPending}
+              onBlur={(e) => e.target.value !== row.description && save(row.id, row.name, e.target.value)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function TablesEditor({
   weather,
   kickoff,
@@ -508,6 +552,7 @@ export default function TablesEditor({
   levelUp,
   inducements,
   specialRules,
+  playerStates,
 }: {
   weather: WeatherRow[];
   kickoff: KickoffRow[];
@@ -517,6 +562,7 @@ export default function TablesEditor({
   levelUp: LevelUpRow[];
   inducements: InducementRow[];
   specialRules: SpecialRuleRow[];
+  playerStates: PlayerStateRow[];
 }) {
   return (
     <div className="space-y-10">
@@ -532,6 +578,7 @@ export default function TablesEditor({
       <LevelUpSection rows={levelUp} />
       <InducementSection rows={inducements} />
       <SpecialRuleSection rows={specialRules} />
+      <PlayerStateSection rows={playerStates} />
     </div>
   );
 }

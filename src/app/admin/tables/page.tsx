@@ -2,7 +2,7 @@ import { prisma } from "@/server/db/prisma";
 import TablesEditor from "./TablesEditor";
 
 export default async function AdminTablesPage() {
-  const [weather, kickoff, prayers, injury, spp, levelUp, inducements, specialRules] = await Promise.all([
+  const [weather, kickoff, prayers, injury, spp, levelUp, inducements, specialRules, playerStates] = await Promise.all([
     prisma.masterWeatherEntry.findMany({ orderBy: { minRoll: "asc" } }),
     prisma.masterKickoffEntry.findMany({ orderBy: { roll: "asc" } }),
     prisma.masterPrayerEntry.findMany({ orderBy: { roll: "asc" } }),
@@ -11,6 +11,7 @@ export default async function AdminTablesPage() {
     prisma.masterLevelUpConfig.findMany({ orderBy: { label: "asc" } }),
     prisma.masterInducement.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.masterSpecialRule.findMany({ orderBy: { name: "asc" } }),
+    prisma.masterPlayerState.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
 
   return (
@@ -23,6 +24,7 @@ export default async function AdminTablesPage() {
       levelUp={levelUp}
       inducements={inducements}
       specialRules={specialRules}
+      playerStates={playerStates}
     />
   );
 }

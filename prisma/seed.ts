@@ -14,6 +14,7 @@ import { LEVEL_UP_SPP_COST, LEVEL_UP_TV_IMPACT_GP } from "../src/rules-engine/da
 import { MATCH_SEQUENCE } from "../src/rules-engine/data/matchSequence";
 import { INDUCEMENTS_TABLE } from "../src/rules-engine/data/tables/inducements";
 import { SPECIAL_RULES_TABLE } from "../src/rules-engine/data/tables/specialRules";
+import { PLAYER_STATES_TABLE } from "../src/rules-engine/data/tables/playerStates";
 
 const prisma = new PrismaClient();
 
@@ -226,6 +227,15 @@ async function main() {
       where: { key: entry.key },
       update: { name: entry.name, description: entry.description },
       create: { key: entry.key, name: entry.name, description: entry.description },
+    });
+  }
+
+  console.log(`Sembrando Estados de un jugador (${PLAYER_STATES_TABLE.length} filas)...`);
+  for (const entry of PLAYER_STATES_TABLE) {
+    await prisma.masterPlayerState.upsert({
+      where: { key: entry.key },
+      update: { name: entry.name, description: entry.description, sortOrder: entry.sortOrder },
+      create: { key: entry.key, name: entry.name, description: entry.description, sortOrder: entry.sortOrder },
     });
   }
 
