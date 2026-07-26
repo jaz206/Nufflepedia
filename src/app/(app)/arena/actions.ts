@@ -26,8 +26,8 @@ async function loadTeamForClone(teamId: string) {
 
 /**
  * Busca equipos de OTROS entrenadores para jugar contra el de un amigo
- * registrado — por nombre de equipo, o por el email exacto con el que
- * entra en la app (para ver de un vistazo todos sus equipos).
+ * registrado — por nombre de equipo, o por el email (parcial vale, no hace
+ * falta escribirlo entero) con el que entra en la app.
  */
 export async function searchOpponentTeams(query: string) {
   const dbUser = await requireUser();
@@ -38,7 +38,7 @@ export async function searchOpponentTeams(query: string) {
     where: {
       isGuest: false,
       ownerId: { not: dbUser.id },
-      ...(isEmail ? { owner: { email: { equals: q, mode: "insensitive" } } } : { name: { contains: q, mode: "insensitive" } }),
+      ...(isEmail ? { owner: { email: { contains: q, mode: "insensitive" } } } : { name: { contains: q, mode: "insensitive" } }),
     },
     select: { id: true, name: true, rosterKey: true, owner: { select: { displayName: true } } },
     take: 20,
