@@ -16,6 +16,28 @@ interface Entry {
 export default function QuickSearch({ entries }: { entries: Entry[] }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Entry | null>(null);
+  // Pila de fichas visitadas al saltar de una a otra por sus enlaces
+  // cruzados, para poder volver atrás en vez de perder de dónde venías.
+  const [history, setHistory] = useState<Entry[]>([]);
+
+  function openEntry(entry: Entry) {
+    setSelected(entry);
+  }
+  function jumpToReference(entry: Entry) {
+    if (selected) setHistory((h) => [...h, selected]);
+    setSelected(entry);
+  }
+  function goBack() {
+    setHistory((h) => {
+      const prev = h[h.length - 1];
+      if (prev) setSelected(prev);
+      return h.slice(0, -1);
+    });
+  }
+  function closeModal() {
+    setSelected(null);
+    setHistory([]);
+  }
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -56,7 +78,7 @@ export default function QuickSearch({ entries }: { entries: Entry[] }) {
               <button
                 key={`${r.type}-${r.key}`}
                 type="button"
-                onClick={() => setSelected(r)}
+                onClick={() => openEntry(r)}
                 className="flex items-center justify-between gap-3 rounded-[3px] border px-3 py-2 text-left text-sm transition-colors"
                 style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
               >
@@ -76,9 +98,19 @@ export default function QuickSearch({ entries }: { entries: Entry[] }) {
         </div>
       )}
 
-      <Modal open={selected !== null} onClose={() => setSelected(null)} title={selected?.name ?? ""}>
+      <Modal open={selected !== null} onClose={closeModal} title={selected?.name ?? ""}>
         {selected && (
           <div className="space-y-3">
+            {history.length > 0 && (
+              <button
+                type="button"
+                onClick={goBack}
+                className="text-xs underline"
+                style={{ color: "var(--ink-3)" }}
+              >
+                ← Volver a {history[history.length - 1].name}
+              </button>
+            )}
             <div className="flex items-center gap-2">
               <span
                 className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
@@ -96,7 +128,7 @@ export default function QuickSearch({ entries }: { entries: Entry[] }) {
                 const ref = nameToEntry.get(t.value.toLowerCase());
                 if (!ref) return <span key={i}>{t.value}</span>;
                 return (
-                  <SkillPill key={i} label={t.value} description={ref.description} onClick={() => setSelected(ref)} />
+                  <SkillPill key={i} label={t.value} description={ref.description} onClick={() => jumpToReference(ref)} />
                 );
               })}
             </p>

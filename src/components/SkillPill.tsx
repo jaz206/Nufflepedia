@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 /**
  * Componente del inventario de DESIGN_SYSTEM.md §7: nombre de habilidad
@@ -21,11 +21,27 @@ export default function SkillPill({
   onClick?: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
   const tooltipId = useId();
+  const anchorRef = useRef<HTMLButtonElement>(null);
+
+  function show() {
+    // Si no cabe debajo (ej. está cerca del borde inferior de un modal o de
+    // la ventana), la abre hacia arriba en su lugar.
+    const rect = anchorRef.current?.getBoundingClientRect();
+    const estimatedHeight = 160;
+    if (rect && window.innerHeight - rect.bottom < estimatedHeight && rect.top > estimatedHeight) {
+      setPlacement("top");
+    } else {
+      setPlacement("bottom");
+    }
+    setOpen(true);
+  }
 
   return (
     <span className="relative inline-block">
       <button
+        ref={anchorRef}
         type="button"
         className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
         style={{
@@ -34,9 +50,9 @@ export default function SkillPill({
           background: "var(--surface-2)",
           cursor: onClick ? "pointer" : description ? "help" : "default",
         }}
-        onMouseEnter={() => setOpen(true)}
+        onMouseEnter={show}
         onMouseLeave={() => setOpen(false)}
-        onFocus={() => setOpen(true)}
+        onFocus={show}
         onBlur={() => setOpen(false)}
         onClick={onClick}
         aria-describedby={description ? tooltipId : undefined}
@@ -49,8 +65,13 @@ export default function SkillPill({
         <span
           id={tooltipId}
           role="tooltip"
-          className="pointer-events-none absolute left-0 top-full z-20 mt-1 w-64 rounded-[3px] border p-2 text-xs leading-relaxed"
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+          className="absolute left-0 z-20 w-64 overflow-y-auto rounded-[3px] border p-2 text-xs leading-relaxed"
           style={{
+            [placement === "top" ? "bottom" : "top"]: "100%",
+            [placement === "top" ? "marginBottom" : "marginTop"]: "4px",
+            maxHeight: "50vh",
             borderColor: "var(--border-strong)",
             background: "var(--surface-3)",
             color: "var(--ink-2)",
