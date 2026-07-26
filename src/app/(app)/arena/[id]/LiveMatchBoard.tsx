@@ -209,28 +209,22 @@ function PreMatchStage({
   const [error, setError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
 
-  function saveFans() {
-    startTransition(async () => {
-      const res = await setFanFactor(liveMatch.id, { home: fanHome, away: fanAway });
-      if (!res.ok) setError(res.error);
-    });
-  }
-  function saveWeather() {
-    if (!weatherId) return;
-    startTransition(async () => {
-      const res = await setWeather(liveMatch.id, weatherId);
-      if (!res.ok) setError(res.error);
-    });
-  }
-  function saveKicking() {
-    if (!kickingId) return;
-    startTransition(async () => {
-      const res = await setKickingTeam(liveMatch.id, kickingId);
-      if (!res.ok) setError(res.error);
-    });
-  }
+  // Todo se queda en estado local hasta pulsar "Empezar el partido" — ahí
+  // se guarda todo de una vez y se abre el marcador, sin ir confirmando
+  // paso a paso.
   function begin() {
+    if (!weatherId || !kickingId) {
+      setError("Elige el Clima y el equipo pateador antes de empezar");
+      return;
+    }
+    setError(undefined);
     startTransition(async () => {
+      const fans = await setFanFactor(liveMatch.id, { home: fanHome, away: fanAway });
+      if (!fans.ok) return setError(fans.error);
+      const w = await setWeather(liveMatch.id, weatherId);
+      if (!w.ok) return setError(w.error);
+      const k = await setKickingTeam(liveMatch.id, kickingId);
+      if (!k.ok) return setError(k.error);
       const res = await startLiveMatch(liveMatch.id);
       if (!res.ok) setError(res.error);
     });
@@ -265,10 +259,6 @@ function PreMatchStage({
             {awayTeam.teamName}
             <input type="number" className="input mt-1 w-20" min={1} value={fanAway} onChange={(e) => setFanAway(Number(e.target.value))} />
           </label>
-          <button type="button" onClick={saveFans} disabled={pending} className="btn-secondary">
-            Guardar
-          </button>
-          {liveMatch.fanFactorHome !== null && <span className="text-xs" style={{ color: "var(--ok)" }}>✓ guardado</span>}
         </div>
       </Panel>
 
@@ -290,10 +280,6 @@ function PreMatchStage({
               </option>
             ))}
           </select>
-          <button type="button" onClick={saveWeather} disabled={pending} className="btn-secondary">
-            Guardar
-          </button>
-          {liveMatch.weatherCode && <span className="text-xs" style={{ color: "var(--ok)" }}>✓ guardado</span>}
         </div>
         {weatherId && (
           <p className="mt-2 text-xs" style={{ color: "var(--ink-2)" }}>
@@ -317,27 +303,18 @@ function PreMatchStage({
             <option value={liveMatch.homeEntryId}>{homeTeam.teamName}</option>
             <option value={liveMatch.awayEntryId}>{awayTeam.teamName}</option>
           </select>
-          <button type="button" onClick={saveKicking} disabled={pending} className="btn-secondary">
-            Guardar
-          </button>
-          {liveMatch.kickingEntryId && <span className="text-xs" style={{ color: "var(--ok)" }}>✓ guardado</span>}
         </div>
       </Panel>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div>
-        <button
-          type="button"
-          onClick={begin}
-          disabled={pending || !liveMatch.weatherCode || !liveMatch.kickingEntryId}
-          className="btn-primary"
-        >
-          Empezar el partido
+        <button type="button" onClick={begin} disabled={pending || !weatherId || !kickingId} className="btn-primary">
+          {pending ? "Guardando…" : "Empezar el partido"}
         </button>
         <p className="mt-1 text-xs" style={{ color: "var(--ink-3)" }}>
-          A partir de aquí se abre el marcador y podrás registrar Touchdowns, bajas, cambios de turno y todo lo demás
-          en vivo.
+          Al pulsar aquí se guarda todo lo elegido arriba de golpe, se abre el marcador y podrás registrar
+          Touchdowns, bajas, cambios de turno y todo lo demás en vivo.
         </p>
       </div>
     </div>

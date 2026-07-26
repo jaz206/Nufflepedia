@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/nufflepedia", label: "La Biblioteca" },
   { href: "/nufflepedia/tablas", label: "Tablas" },
+  { href: "/nufflepedia/partido", label: "Secuencia de Partido" },
   { href: "/equipos", label: "Equipos" },
   { href: "/competiciones", label: "Competiciones" },
   { href: "/pizarra", label: "Pizarra" },

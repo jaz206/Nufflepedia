@@ -20,7 +20,7 @@ const STATUS_TOKEN: Record<string, string> = {
 export default async function DashboardPage() {
   const dbUser = await requireUser();
 
-  const [teams, entries, skills, traits, races, stars, allEntries, playerStates] = await Promise.all([
+  const [teams, entries, skills, traits, races, stars, allEntries, playerStates, liveMatches] = await Promise.all([
     prisma.managedTeam.findMany({
       where: { ownerId: dbUser.id, isGuest: false },
       orderBy: { createdAt: "desc" },
@@ -41,6 +41,11 @@ export default async function DashboardPage() {
       select: { id: true, managedTeamId: true, teamName: true, tdFor: true, casFor: true, won: true, played: true },
     }),
     prisma.masterPlayerState.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.liveMatch.findMany({
+      where: { createdById: dbUser.id, status: { not: "FINISHED" } },
+      include: { homeEntry: true, awayEntry: true },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   const raceNameByKey = Object.fromEntries(races.map((r) => [r.key, r.name]));
@@ -192,12 +197,50 @@ export default async function DashboardPage() {
         )}
       </section>
 
+      {liveMatches.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Mis partidos en la Arena</h2>
+            <Link href="/arena" className="btn-secondary">
+              Ver todos
+            </Link>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {liveMatches.map((m) => (
+              <Link
+                key={m.id}
+                href={`/arena/${m.id}`}
+                className="flex items-center justify-between rounded-[3px] border px-4 py-3 transition-colors"
+                style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
+              >
+                <div>
+                  <p className="font-semibold">
+                    {m.homeEntry.teamName} <span style={{ color: "var(--ink-3)" }}>vs</span> {m.awayEntry.teamName}
+                  </p>
+                  {m.status === "IN_PROGRESS" && (
+                    <p className="font-mono text-sm" style={{ color: "var(--gold)" }}>
+                      {m.homeScore} — {m.awayScore}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className="rounded-full px-2 py-1 text-xs font-medium"
+                  style={{ color: m.status === "IN_PROGRESS" ? "var(--warn)" : "var(--ink-3)", background: "var(--surface-2)" }}
+                >
+                  {m.status === "IN_PROGRESS" ? "En curso" : "Preparando"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {(topScorers.length > 0 || topBashers.length > 0) && (
         <section>
           <h2 className="mb-3 text-lg font-semibold">Estadísticas de la liga</h2>
           <p className="mb-3 text-xs" style={{ color: "var(--ink-3)" }}>
-            Global, de todos los entrenadores. Solo touchdowns y bajas por ahora — pases y
-            otras estadísticas por jugada llegarán con el Asistente de Partido en vivo.
+            Global, de todos los entrenadores. Solo touchdowns y bajas de competiciones por ahora — las estadísticas
+            de los amistosos de la Arena todavía no se suman aquí.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-[3px] border p-4" style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}>
