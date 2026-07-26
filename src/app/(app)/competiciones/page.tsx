@@ -18,8 +18,10 @@ export default async function CompeticionesPage() {
   const dbUser = await requireUser();
 
   const [myEntries, myCommissioned, discoverable] = await Promise.all([
+    // competitionId: not null — excluye inscripciones "amistosas" sueltas
+    // (Asistente de Partido en vivo), que no pertenecen a ninguna Competition.
     prisma.competitionEntry.findMany({
-      where: { ownerId: dbUser.id },
+      where: { ownerId: dbUser.id, competitionId: { not: null } },
       include: { competition: { include: { _count: { select: { entries: true } } } } },
       orderBy: { competition: { createdAt: "desc" } },
     }),
@@ -48,7 +50,8 @@ export default async function CompeticionesPage() {
   // casero con varios equipos de un usuario), myEntries trae una fila por
   // equipo — hay que deduplicar por competición o salen claves repetidas.
   const seenCompIds = new Set<string>();
-  const myCompetitions = [...myEntries.map((e) => e.competition), ...commissionedNotEntered].filter((c) => {
+  // .competition! : garantizado no-null por el filtro competitionId: { not: null } de arriba.
+  const myCompetitions = [...myEntries.map((e) => e.competition!), ...commissionedNotEntered].filter((c) => {
     if (seenCompIds.has(c.id)) return false;
     seenCompIds.add(c.id);
     return true;

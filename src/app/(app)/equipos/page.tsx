@@ -8,7 +8,7 @@ export default async function EquiposPage() {
 
   const [teams, races] = await Promise.all([
     prisma.managedTeam.findMany({
-      where: { ownerId: dbUser.id },
+      where: { ownerId: dbUser.id, isGuest: false },
       include: { players: true },
       orderBy: { createdAt: "desc" },
     }),

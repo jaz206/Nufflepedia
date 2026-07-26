@@ -22,7 +22,7 @@ export default async function DashboardPage() {
 
   const [teams, entries, skills, traits, races, stars, allEntries, playerStates] = await Promise.all([
     prisma.managedTeam.findMany({
-      where: { ownerId: dbUser.id },
+      where: { ownerId: dbUser.id, isGuest: false },
       orderBy: { createdAt: "desc" },
     }),
     prisma.competitionEntry.findMany({
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
               >
                 <div>
                   <p className="font-semibold">
-                    {entry.competition.name}
+                    {entry.competition!.name}
                     <span className="ml-2 font-normal" style={{ color: "var(--ink-3)" }}>
                       ({entry.teamName})
                     </span>
@@ -180,11 +180,11 @@ export default async function DashboardPage() {
                 <span
                   className="rounded-full px-2 py-1 text-xs font-medium"
                   style={{
-                    color: STATUS_TOKEN[entry.competition.status],
+                    color: STATUS_TOKEN[entry.competition!.status],
                     background: "var(--surface-2)",
                   }}
                 >
-                  {STATUS_LABEL[entry.competition.status]}
+                  {STATUS_LABEL[entry.competition!.status]}
                 </span>
               </Link>
             ))}

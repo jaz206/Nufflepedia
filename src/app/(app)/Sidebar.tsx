@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: "/equipos", label: "Equipos" },
   { href: "/competiciones", label: "Competiciones" },
   { href: "/pizarra", label: "Pizarra" },
-  { href: "/arena", label: "Arena", badge: "Futuro" },
+  { href: "/arena", label: "Arena" },
 ];
 
 export default function Sidebar() {
@@ -40,17 +40,6 @@ export default function Sidebar() {
             }}
           >
             {item.label}
-            {item.badge && (
-              <span
-                className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
-                style={{
-                  background: active ? "color-mix(in srgb, var(--accent-ink) 20%, transparent)" : "var(--surface-2)",
-                  color: active ? "var(--accent-ink)" : "var(--ink-3)",
-                }}
-              >
-                {item.badge}
-              </span>
-            )}
           </Link>
         );
       })}

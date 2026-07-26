@@ -27,8 +27,17 @@ const createTeamSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(40, "Máximo 40 caracteres"),
 });
 
-/** Funda un equipo nuevo con el presupuesto inicial completo (1.000.000 MO) y redirige a su ficha. */
-export async function createTeam(input: { raceKey: string; name: string }): Promise<ActionResult> {
+/**
+ * Funda un equipo nuevo con el presupuesto inicial completo (1.000.000 MO)
+ * y redirige a su ficha. `isGuest` lo usa el Asistente de Partido en vivo al
+ * crear el equipo de un amigo sin cuenta al vuelo: se oculta de "Mis
+ * equipos" y la ficha muestra un aviso para volver a Arena tras montar la
+ * plantilla (`?arena=1`).
+ */
+export async function createTeam(
+  input: { raceKey: string; name: string },
+  options?: { isGuest?: boolean }
+): Promise<ActionResult> {
   const dbUser = await requireUser();
   const parsed = createTeamSchema.safeParse(input);
   if (!parsed.success) {
@@ -44,12 +53,13 @@ export async function createTeam(input: { raceKey: string; name: string }): Prom
       name: parsed.data.name,
       rosterKey: race.key,
       treasury: STARTING_BUDGET,
+      isGuest: options?.isGuest ?? false,
     },
   });
 
   revalidatePath("/equipos");
   revalidatePath("/dashboard");
-  redirect(`/equipos/${team.id}`);
+  redirect(options?.isGuest ? `/equipos/${team.id}?arena=1` : `/equipos/${team.id}`);
 }
 
 /**

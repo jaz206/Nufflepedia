@@ -30,7 +30,8 @@ export interface InjuryInput {
 }
 
 export interface MatchTeams {
-  competitionId: string;
+  /// null = amistoso suelto (LiveMatch), sin "temporada" de la que sacar contexto.
+  competitionId: string | null;
   homeEntryId: string;
   homeTeamName: string;
   awayEntryId: string;
@@ -138,29 +139,33 @@ export async function applyBoxScore(
 
   // Tabla de máximos anotadores de la competición, DESPUÉS de este partido
   // (ya incluye los MatchScorer recién creados arriba) — le da a la crónica
-  // contexto de temporada en vez de narrar cada partido en el vacío.
-  const topScorersRaw = await tx.matchScorer.groupBy({
-    by: ["playerId"],
-    where: { playerId: { not: null }, matchReport: { competitionId: match.competitionId } },
-    _count: { playerId: true },
-    orderBy: { _count: { playerId: "desc" } },
-    take: 3,
-  });
-  const topScorerIds = topScorersRaw.map((r) => r.playerId).filter((id): id is string => !!id);
-  const topScorerPlayers = topScorerIds.length
-    ? await tx.competitionPlayer.findMany({
-        where: { id: { in: topScorerIds } },
-        include: { entry: true },
+  // contexto de temporada en vez de narrar cada partido en el vacío. Un
+  // amistoso suelto (competitionId null) no tiene "temporada", se omite.
+  let seasonTopScorers: { name: string; teamName: string; count: number }[] = [];
+  if (match.competitionId) {
+    const topScorersRaw = await tx.matchScorer.groupBy({
+      by: ["playerId"],
+      where: { playerId: { not: null }, matchReport: { competitionId: match.competitionId } },
+      _count: { playerId: true },
+      orderBy: { _count: { playerId: "desc" } },
+      take: 3,
+    });
+    const topScorerIds = topScorersRaw.map((r) => r.playerId).filter((id): id is string => !!id);
+    const topScorerPlayers = topScorerIds.length
+      ? await tx.competitionPlayer.findMany({
+          where: { id: { in: topScorerIds } },
+          include: { entry: true },
+        })
+      : [];
+    const topScorerById = new Map(topScorerPlayers.map((p) => [p.id, p]));
+    seasonTopScorers = topScorersRaw
+      .map((r) => {
+        const p = r.playerId ? topScorerById.get(r.playerId) : undefined;
+        if (!p) return null;
+        return { name: p.customName, teamName: p.entry.teamName, count: r._count.playerId };
       })
-    : [];
-  const topScorerById = new Map(topScorerPlayers.map((p) => [p.id, p]));
-  const seasonTopScorers = topScorersRaw
-    .map((r) => {
-      const p = r.playerId ? topScorerById.get(r.playerId) : undefined;
-      if (!p) return null;
-      return { name: p.customName, teamName: p.entry.teamName, count: r._count.playerId };
-    })
-    .filter((x): x is { name: string; teamName: string; count: number } => !!x);
+      .filter((x): x is { name: string; teamName: string; count: number } => !!x);
+  }
 
   const { headline, article } = buildMatchArticle({
     homeTeamName: match.homeTeamName,

@@ -136,7 +136,7 @@ export default async function CompetitionPage({ params }: { params: Promise<{ id
 
   const enteredTeamIds = competition.entries.map((e) => e.managedTeamId).filter((tid): tid is string => tid !== null);
   const myJoinableTeams = await prisma.managedTeam.findMany({
-    where: { ownerId: dbUser.id, id: { notIn: enteredTeamIds } },
+    where: { ownerId: dbUser.id, isGuest: false, id: { notIn: enteredTeamIds } },
     select: { id: true, name: true },
   });
 

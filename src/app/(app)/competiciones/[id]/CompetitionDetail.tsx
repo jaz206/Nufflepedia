@@ -41,7 +41,9 @@ interface MatchReportRow {
   playedAt: string;
   headline: string | null;
   article: string | null;
-  source: "FIXTURE" | "GROUP" | "BRACKET";
+  // FRIENDLY nunca aparece de verdad aquí (un amistoso no pertenece a
+  // ninguna competición), pero el enum de Prisma lo incluye igualmente.
+  source: "FIXTURE" | "GROUP" | "BRACKET" | "FRIENDLY";
   editedAt: string | null;
   editedByName: string | null;
 }

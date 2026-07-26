@@ -131,6 +131,40 @@ registra el resultado ya decidido, igual que con los resultados de partido.
   oficial, no lógica de compra todavía) transcrito del reglamento — ver
   §11.3 de `MASTER_PLAN.md`.
 
+## Asistente de Partido en vivo (`LiveMatch`/`LiveMatchEvent`) — 2026-07-26
+
+Un amistoso reutiliza `CompetitionEntry`/`CompetitionPlayer` con
+`competitionId: null` (ver más abajo por qué es opcional) en vez de inventar
+un modelo paralelo — así `cloneRosterIntoEntry`/`applyBoxScore` funcionan
+igual que en una competición sin tocarlos. `LiveMatch` guarda el estado
+derivado del partido (marcador, mitad/turno, clima, quién patea,
+`matchReportId` una vez cerrado); `LiveMatchEvent` es un registro
+append-only — cada botón que se pulsa durante el partido (Touchdown, Baja,
+Cambio de turno...) es una fila, con el partido ya persistido en Postgres
+desde el primer evento (no solo en memoria del navegador). Al "Finalizar
+partido" se reconstruye el `MatchReport` a partir de ese registro y, a
+diferencia de una competición, se sincroniza PE/estado/atributos de vuelta a
+`ManagedPlayer` (vía `CompetitionPlayer.sourcePlayerId`) — un amistoso sí
+hace progresar al equipo real.
+
+## `CompetitionEntry.competitionId` opcional — 2026-07-26
+
+Pasó de obligatorio a `String?` para que un `LiveMatch` (amistoso suelto)
+pueda crear sus propias `CompetitionEntry` sin pertenecer a ninguna
+`Competition`. Cualquier lectura que asuma "toda inscripción pertenece a una
+competición" (listados de "Mis ligas" en `/competiciones` y `/dashboard`)
+filtra explícitamente `competitionId: { not: null }` para no mezclar
+amistosos con competiciones reales.
+
+## `ManagedTeam.isGuest` — equipos creados al vuelo — 2026-07-26
+
+Un equipo invitado (`isGuest: true`) es un `ManagedTeam` normal en todo lo
+demás — mismo constructor, misma ficha, misma plantilla — pero se oculta de
+"Mis equipos" y de la lista de equipos que se pueden inscribir en una
+competición. Existe para que alguien sin cuenta pueda jugar un amistoso: se
+crea su equipo (raza + nombre), se monta la plantilla, y ya se puede usar
+como rival en el Asistente de Partido en vivo.
+
 ## Estados de un jugador durante el partido (`MasterPlayerState`) — 2026-07-25
 
 Los 4 estados oficiales (En pie, Distraído, Tumbado boca arriba, Aturdido —

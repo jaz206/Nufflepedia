@@ -41,6 +41,7 @@ model User {
   competitionEntries CompetitionEntry[]
   sentInvitations    Invitation[]       @relation("InvitedBy")
   editedMatchReports MatchReport[]      @relation("MatchReportEditor")
+  liveMatches        LiveMatch[]
 }
 
 /// Estado de un jugador entre partidos (roster). Los estados transitorios de
@@ -74,6 +75,10 @@ model ManagedTeam {
   assistantCoaches Int      @default(0)
   hasApothecary    Boolean  @default(false)
   fanFactor        Int      @default(1)
+  /// Equipo creado al vuelo para un amistoso, por alguien sin cuenta (un
+  /// amigo "invitado"). Es un ManagedTeam normal en todo lo demás — solo se
+  /// oculta de "Mis equipos" para no mezclarse con los equipos reales.
+  isGuest          Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -176,8 +181,11 @@ model Competition {
 
 model CompetitionEntry {
   id            String       @id @default(uuid())
-  competitionId String
-  competition   Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  /// Nullable a propósito: una inscripción "amistosa" para un LiveMatch
+  /// suelto no pertenece a ninguna Competition — reutiliza toda la
+  /// maquinaria de plantilla-copia/box score sin necesitar una liga/torneo.
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id], onDelete: Cascade)
   /// Nullable a propósito: si el dueño disuelve el equipo real en El
   /// Cuartel, esta inscripción no debe romperse (la copia de trabajo en
   /// CompetitionPlayer ya es autosuficiente) — la referencia simplemente
@@ -220,6 +228,11 @@ model CompetitionEntry {
   injuriesCaused   MatchInjury[] @relation("InjuryAttackerEntry")
   injuriesReceived MatchInjury[] @relation("InjuryVictimEntry")
   inducementPurchases MatchInducementPurchase[]
+
+  /// Un amistoso creado por el Asistente de Partido en vivo (LiveMatch) crea
+  /// exactamente una CompetitionEntry por lado — nunca ambas a la vez.
+  homeLiveMatch LiveMatch? @relation("LiveMatchHome")
+  awayLiveMatch LiveMatch? @relation("LiveMatchAway")
 
   @@unique([competitionId, managedTeamId])
   @@index([competitionId])
@@ -309,6 +322,9 @@ enum MatchSource {
   FIXTURE
   GROUP
   BRACKET
+  /// Partido amistoso suelto, generado por el Asistente de Partido en vivo
+  /// (LiveMatch), sin pertenecer a ninguna Competition.
+  FRIENDLY
 }
 
 /**
@@ -405,6 +421,102 @@ model MatchInducementPurchase {
   createdAt     DateTime    @default(now())
 
   @@index([matchReportId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Asistente de Partido en vivo (Fase 4, v1). Un LiveMatch es un amistoso
+// suelto (nunca ligado a una Competition) que se juega "en directo": cada
+// acción relevante queda como un LiveMatchEvent desde el primer minuto (no
+// solo al terminar), para no perder nada si se cierra la pestaña a mitad de
+// partido, y para que "Finalizar partido" solo tenga que RECONSTRUIR el
+// resultado a partir de ese registro (reutilizando applyBoxScore) en vez de
+// pedir que se rellene todo de nuevo a mano. Un solo dispositivo lleva
+// ambos lados por ahora; el registro en BD desde ya deja el terreno
+// preparado para que el día de mañana cada móvil se suscriba al mismo
+// LiveMatch por Realtime sin rediseñar nada.
+// ─────────────────────────────────────────────────────────────────────────
+
+enum LiveMatchStatus {
+  PRE_MATCH
+  IN_PROGRESS
+  FINISHED
+}
+
+enum LiveMatchEventType {
+  FAN_FACTOR
+  WEATHER_ROLL
+  KICKING_TEAM_ROLL
+  KICKOFF_EVENT
+  TURNOVER
+  TOUCHDOWN
+  COMPLETED_PASS
+  INTERCEPTION
+  CASUALTY
+  SENT_OFF
+  APOTHECARY_USED
+  SUBSTITUTION
+  PRAYER_TO_NUFFLE
+  KO_RECOVERY
+  HALF_END
+  NOTE
+}
+
+model LiveMatch {
+  id            String          @id @default(uuid())
+  status        LiveMatchStatus @default(PRE_MATCH)
+  createdById   String
+  createdBy     User            @relation(fields: [createdById], references: [id])
+
+  homeEntryId String            @unique
+  homeEntry   CompetitionEntry  @relation("LiveMatchHome", fields: [homeEntryId], references: [id], onDelete: Cascade)
+  awayEntryId String            @unique
+  awayEntry   CompetitionEntry  @relation("LiveMatchAway", fields: [awayEntryId], references: [id], onDelete: Cascade)
+
+  half      Int @default(1)
+  turn      Int @default(1)
+  homeScore Int @default(0)
+  awayScore Int @default(0)
+
+  /// Resultado de la secuencia anterior al partido — se rellenan al ir
+  /// resolviendo esos pasos, antes de pasar a IN_PROGRESS.
+  fanFactorHome    Int?
+  fanFactorAway    Int?
+  weatherCode      String?
+  kickingEntryId   String?
+
+  /// Una vez finalizado, el resultado "de verdad" (marcador, crónica, PE
+  /// aplicado) vive en el MatchReport igual que cualquier otro partido —
+  /// este registro es solo el "cómo se jugó en directo".
+  matchReportId String? @unique
+
+  events    LiveMatchEvent[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+}
+
+/// Registro de eventos append-only de un LiveMatch. entryId/playerId son el
+/// protagonista del evento (quien anota, quien causa la baja, el equipo que
+/// cambia de turno...); opponentEntryId/opponentPlayerId el otro lado
+/// cuando aplica (ej. la víctima de una lesión). payload guarda datos
+/// específicos de cada tipo (injuryCode/statLoss, código de clima/evento de
+/// patada, texto libre de una nota).
+model LiveMatchEvent {
+  id              String             @id @default(uuid())
+  liveMatchId     String
+  liveMatch       LiveMatch          @relation(fields: [liveMatchId], references: [id], onDelete: Cascade)
+  type            LiveMatchEventType
+  half            Int
+  turn            Int
+  entryId         String?
+  playerId        String?
+  opponentEntryId String?
+  opponentPlayerId String?
+  payload         Json               @default("{}")
+  createdAt       DateTime           @default(now())
+
+  @@index([liveMatchId])
 }
 
 enum InvitationStatus {

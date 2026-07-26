@@ -12,7 +12,7 @@ export interface MatchReportRow {
   playedAt: string;
   headline: string | null;
   article: string | null;
-  source: "FIXTURE" | "GROUP" | "BRACKET";
+  source: "FIXTURE" | "GROUP" | "BRACKET" | "FRIENDLY";
   editedAt: string | null;
   editedByName: string | null;
 }

@@ -120,6 +120,7 @@ export async function hireCompetitionStar(entryId: string, starKey: string): Pro
     include: { players: true, competition: true },
   });
   if (!entry || entry.ownerId !== dbUser.id) return { ok: false, error: "No autorizado" };
+  if (!entry.competition) return { ok: false, error: "Esta inscripción no pertenece a una competición" };
   if (entry.competition.status === "FINISHED") return { ok: false, error: "La competición ya ha finalizado" };
   if (entry.players.length >= MAX_ROSTER) return { ok: false, error: `Plantilla al máximo de ${MAX_ROSTER} jugadores` };
 

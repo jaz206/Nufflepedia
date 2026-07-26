@@ -527,6 +527,55 @@ Fase 3, más el primer despliegue público:
   vuelta a local — se actualizó a la URL real de Vercel y se añadieron
   ambas (`localhost` y producción) a "Redirect URLs".
 
+### 11.5 Asistente de Partido en vivo — v1 (2026-07-26)
+
+Primera versión de Fase 4, alcance deliberadamente acotado tras planificarlo
+con el usuario (referencia estudiada: el módulo "Colisep" del prototipo
+anterior — ver `ARCHITECTURE.md` para qué se rescató y qué se descartó de
+ahí). Decisiones cerradas con el usuario:
+
+- **Tiradas físicas, no simuladas**: el asistente dice qué tirada toca
+  (Clima, Patada Inicial, Plegaria...) y el usuario introduce el resultado
+  ya decidido en mesa — mismo patrón "consulta, no simulación" del resto
+  de la app.
+- **Un solo dispositivo por ahora**, pero el estado del partido vive en
+  Postgres desde el primer evento (no solo en memoria del navegador), para
+  que el día de mañana cada móvil pueda suscribirse al mismo partido por
+  Realtime sin rediseñar nada.
+- **Vale para amistosos Y para equipos de un amigo**: puedes jugar contra
+  otro de tus equipos, contra el equipo real de un amigo con cuenta
+  (buscado por nombre), o crear al vuelo un equipo "invitado" para alguien
+  sin cuenta (elige raza + nombre, monta la plantilla, y ya se puede jugar).
+- **Alcance de "qué se registra"**: nada de tirar dados táctico a mano en
+  la app (esquivar, forzar la marcha, empujones...) — eso pasa en la mesa.
+  Los "botones" son los eventos que de verdad generan estadística/PE o
+  cambian el estado de un jugador: Touchdown, Pase completado, Intercepción,
+  Baja causada, Expulsión, Cambio de turno, Uso de Apotecario, Cambio de
+  banquillo, Plegaria a Nuffle, Evento de Patada Inicial, Recuperación K.O.
+
+**Modelo de datos**: `CompetitionEntry.competitionId` pasó a ser opcional —
+un amistoso suelto crea dos `CompetitionEntry` (una por equipo) con
+`competitionId: null`, reutilizando TAL CUAL toda la maquinaria ya existente
+de plantilla-copia (`cloneRosterIntoEntry`) y box score (`applyBoxScore`) que
+antes solo servían a competiciones. `MatchSource` ganó el valor `FRIENDLY`.
+Nuevo `ManagedTeam.isGuest` para los equipos creados al vuelo (se ocultan de
+"Mis equipos" pero son equipos normales en todo lo demás). Nuevos modelos
+`LiveMatch` (estado derivado: marcador, mitad/turno, clima, quién patea) y
+`LiveMatchEvent` (registro append-only — cada botón pulsado es una fila).
+"Finalizar partido" reconstruye el `MatchReport` a partir de ese registro
+(nadie vuelve a teclear el resultado), y **a diferencia de una competición**
+sincroniza PE/estado/atributos de vuelta a la plantilla real de El Cuartel —
+un amistoso sí hace progresar al equipo.
+
+**Deliberadamente fuera de esta v1** (quedan para cuando se pruebe en mesa
+y se vea qué falta): enganchar el asistente a partidos de competición
+(jornadas de liga/grupos/cuadro — hoy siguen usando el formulario post-hoc
+de `MatchDetailsForm`); sincronización Realtime multi-dispositivo; gating
+fino de qué acciones puede hacer un jugador según su posición/habilidades
+(hoy todos los botones están siempre disponibles para cualquier jugador
+seleccionado); "quién está en el campo ahora mismo" es solo un estado visual
+del cliente (no persiste, se pierde al recargar).
+
 ## Cuestiones abiertas
 
 Ninguna bloqueante. Detalles a concretar sobre la marcha: elección final de
