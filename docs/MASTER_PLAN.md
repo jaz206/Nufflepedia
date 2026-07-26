@@ -576,6 +576,54 @@ fino de qué acciones puede hacer un jugador según su posición/habilidades
 seleccionado); "quién está en el campo ahora mismo" es solo un estado visual
 del cliente (no persiste, se pierde al recargar).
 
+### 11.6 Afinado del Asistente de Partido tras primer uso real, y página de Guía (2026-07-26)
+
+Tras terminar la v1 (§11.5), el usuario lo probó de verdad y salieron varios
+ajustes en la misma sesión:
+
+- **Fix real: timeout al crear un amistoso**. Clonar las dos plantillas
+  completas en una sola transacción podía superar el timeout por defecto
+  de Prisma (5s) contra el pooler de Supabase desde una función serverless
+  fría — se subió a 20s en `createFriendlyMatch`.
+- **Fix real: búsqueda de rival por email**. Primero exigía coincidencia
+  exacta (`equals`) — un espacio de más (fácil con autocompletar del
+  móvil) hacía que no encontrara nada; se cambió a `contains`. Después
+  seguía apareciendo un "no encontrado" un instante antes de que llegara
+  el resultado bueno — era una carrera entre peticiones por cada tecla
+  pulsada; se arregló con debounce de 300ms + un contador de secuencia que
+  descarta respuestas de búsquedas anteriores que llegan tarde.
+- **Ficha del jugador al seleccionarlo**: ahora muestra posición (o
+  "Jugador Estrella"), estadísticas efectivas, habilidades con tooltip, y
+  un resumen de lo hecho en el partido (TD/pases/intercepciones/bajas),
+  calculado sobre la marcha a partir del registro de eventos — no hace
+  falta ninguna tabla nueva, ya estaba todo en `LiveMatchEvent`.
+- **Explicaciones educativas**: cada botón de control (Cambio de turno,
+  Evento de Patada Inicial, Plegaria a Nuffle, Finalizar partido...) y
+  cada acción de jugador lleva ahora una línea explicando qué hace y a qué
+  afecta — igual en las pantallas de pre-partido y post-partido, para que
+  quien lo use vaya aprendiendo el reglamento sin salir de la app.
+- **Pre-partido sin guardado paso a paso**: Hinchas/Clima/equipo pateador
+  vivían antes como tres guardados independientes contra el servidor; pasó
+  a ser todo estado local hasta pulsar "Empezar el partido", que lo guarda
+  de una vez y arranca — menos fricción, un solo punto de fallo en vez de
+  tres.
+- **Integración con el resto de la app**: el dashboard ahora tiene una
+  sección "Mis partidos en la Arena" con los amistosos en preparación/en
+  curso; el menú lateral separó "Secuencia de Partido" de "Arena" (antes
+  solo vivía como sub-página de Nufflepedia, sin entrada propia).
+
+**Página de Guía (`/guia`)**: nueva sección en el menú (separada con una
+línea, al final) con tarjetas explicando qué es y para qué sirve cada
+apartado del menú lateral, más un FAQ desplegable. El contenido vive en
+`MasterGuideSection`/`MasterGuideFaq`, editable desde `/admin/guia` — mismo
+patrón de siempre (semilla en `prisma/guideData.ts`, no en
+`src/rules-engine/` porque esto es copy de la propia app, no reglas
+oficiales). Al escribir el contenido se detectó y corrigió una
+inconsistencia de nombres: la tarjeta de `/competiciones` decía "La Arena
+(Competiciones)", reabriendo la confusión con el "Arena" real (Asistente de
+Partido en vivo) que el proyecto ya había resuelto antes (ver nota de
+nombres en §2) — se dejó solo como "Competiciones", igual que en el menú.
+
 ## Cuestiones abiertas
 
 Ninguna bloqueante. Detalles a concretar sobre la marcha: elección final de

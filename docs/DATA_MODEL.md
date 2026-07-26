@@ -131,6 +131,16 @@ registra el resultado ya decidido, igual que con los resultados de partido.
   oficial, no lógica de compra todavía) transcrito del reglamento — ver
   §11.3 de `MASTER_PLAN.md`.
 
+## Contenido de la página Guía (`MasterGuideSection`/`MasterGuideFaq`) — 2026-07-26
+
+`/guia` explica qué es y para qué sirve cada apartado del menú lateral, más
+un FAQ. Su contenido (título/descripción de cada tarjeta, pregunta/respuesta
+de cada FAQ) vive en estas dos tablas y es editable desde `/admin/guia` —
+emoji/color/href de cada tarjeta son estructurales (enlazan a una ruta real)
+y no se editan desde el admin, solo el texto. Semilla en
+`prisma/guideData.ts`, no en `src/rules-engine/` porque es copy propio de la
+app, no contenido de reglas oficiales.
+
 ## Asistente de Partido en vivo (`LiveMatch`/`LiveMatchEvent`) — 2026-07-26
 
 Un amistoso reutiliza `CompetitionEntry`/`CompetitionPlayer` con
