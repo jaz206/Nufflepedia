@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { createFriendlyMatch, searchOpponentTeams } from "../actions";
 import { createTeam } from "../../equipos/actions";
@@ -37,18 +37,34 @@ export default function NewFriendlyForm({
   const [guestRace, setGuestRace] = useState(races[0]?.key ?? "");
   const [error, setError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
+  // Contador de peticiones: si el usuario sigue escribiendo, ignora la
+  // respuesta de una búsqueda anterior que tarde en llegar — si no, podía
+  // aparecer un "no encontrado" de un resultado viejo justo antes de que
+  // llegara el bueno.
+  const searchSeq = useRef(0);
 
-  async function runSearch(value: string) {
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) return;
+    const mySeq = ++searchSeq.current;
+    const timer = setTimeout(async () => {
+      const found = await searchOpponentTeams(q);
+      if (mySeq !== searchSeq.current) return; // llegó tarde, ya no aplica
+      setResults(found);
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  function runSearch(value: string) {
     setQuery(value);
     setAwayTeamId("");
     if (value.trim().length < 2) {
       setResults([]);
-      return;
+      setSearching(false);
+    } else {
+      setSearching(true);
     }
-    setSearching(true);
-    const found = await searchOpponentTeams(value);
-    setResults(found);
-    setSearching(false);
   }
 
   function handleModeChange(next: OpponentMode) {
