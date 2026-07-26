@@ -24,19 +24,24 @@ async function loadTeamForClone(teamId: string) {
   });
 }
 
-/** Busca equipos de OTROS entrenadores por nombre, para jugar contra el de un amigo registrado. */
+/**
+ * Busca equipos de OTROS entrenadores para jugar contra el de un amigo
+ * registrado — por nombre de equipo, o por el email exacto con el que
+ * entra en la app (para ver de un vistazo todos sus equipos).
+ */
 export async function searchOpponentTeams(query: string) {
   const dbUser = await requireUser();
   const q = query.trim();
   if (q.length < 2) return [];
+  const isEmail = q.includes("@");
   const teams = await prisma.managedTeam.findMany({
     where: {
-      name: { contains: q, mode: "insensitive" },
       isGuest: false,
       ownerId: { not: dbUser.id },
+      ...(isEmail ? { owner: { email: { equals: q, mode: "insensitive" } } } : { name: { contains: q, mode: "insensitive" } }),
     },
     select: { id: true, name: true, rosterKey: true, owner: { select: { displayName: true } } },
-    take: 10,
+    take: 20,
   });
   return teams;
 }
@@ -54,31 +59,38 @@ export async function createFriendlyMatch(input: { homeTeamId: string; awayTeamI
   if (!awayTeam) return { ok: false, error: "Equipo rival no encontrado" };
 
   let liveMatchId = "";
-  await prisma.$transaction(async (tx) => {
-    const homeEntry = await tx.competitionEntry.create({
-      data: {
-        ownerId: homeTeam.ownerId,
-        managedTeamId: homeTeam.id,
-        teamName: homeTeam.name,
-        rosterKey: homeTeam.rosterKey,
-      },
-    });
-    const awayEntry = await tx.competitionEntry.create({
-      data: {
-        ownerId: awayTeam.ownerId,
-        managedTeamId: awayTeam.id,
-        teamName: awayTeam.name,
-        rosterKey: awayTeam.rosterKey,
-      },
-    });
-    await cloneRosterIntoEntry(tx, homeEntry.id, homeTeam.treasury, homeTeam.players);
-    await cloneRosterIntoEntry(tx, awayEntry.id, awayTeam.treasury, awayTeam.players);
+  await prisma.$transaction(
+    async (tx) => {
+      const homeEntry = await tx.competitionEntry.create({
+        data: {
+          ownerId: homeTeam.ownerId,
+          managedTeamId: homeTeam.id,
+          teamName: homeTeam.name,
+          rosterKey: homeTeam.rosterKey,
+        },
+      });
+      const awayEntry = await tx.competitionEntry.create({
+        data: {
+          ownerId: awayTeam.ownerId,
+          managedTeamId: awayTeam.id,
+          teamName: awayTeam.name,
+          rosterKey: awayTeam.rosterKey,
+        },
+      });
+      await cloneRosterIntoEntry(tx, homeEntry.id, homeTeam.treasury, homeTeam.players);
+      await cloneRosterIntoEntry(tx, awayEntry.id, awayTeam.treasury, awayTeam.players);
 
-    const liveMatch = await tx.liveMatch.create({
-      data: { createdById: dbUser.id, homeEntryId: homeEntry.id, awayEntryId: awayEntry.id },
-    });
-    liveMatchId = liveMatch.id;
-  });
+      const liveMatch = await tx.liveMatch.create({
+        data: { createdById: dbUser.id, homeEntryId: homeEntry.id, awayEntryId: awayEntry.id },
+      });
+      liveMatchId = liveMatch.id;
+    },
+    // Clonar DOS plantillas completas (jugadores + habilidades) en una sola
+    // transacción es el doble de idas y vueltas que un joinCompetition normal
+    // (que solo clona una) — el timeout por defecto de Prisma (5s) se queda
+    // corto contra el pooler de Supabase desde una función serverless fría.
+    { timeout: 20_000 }
+  );
 
   revalidatePath("/arena");
   redirect(`/arena/${liveMatchId}`);

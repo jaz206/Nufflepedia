@@ -155,7 +155,7 @@ export default function NewFriendlyForm({
             <input
               type="search"
               className="input"
-              placeholder="Nombre del equipo de tu amigo…"
+              placeholder="Nombre de su equipo, o su email exacto para ver todos los suyos…"
               value={query}
               onChange={(e) => runSearch(e.target.value)}
             />
