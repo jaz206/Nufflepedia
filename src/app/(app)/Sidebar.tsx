@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/competiciones", label: "Competiciones" },
   { href: "/pizarra", label: "Pizarra" },
   { href: "/arena", label: "Arena" },
+  { href: "/guia", label: "Guía" },
 ];
 
 export default function Sidebar() {
@@ -30,18 +31,20 @@ export default function Sidebar() {
         const mostSpecific = NAV_ITEMS.filter((i) => matches(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
         const active = matches(item.href) && mostSpecific?.href === item.href;
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex items-center justify-between rounded-[3px] px-3 py-2 text-sm transition-colors"
-            style={{
-              color: active ? "var(--accent-ink)" : "var(--ink-2)",
-              background: active ? "var(--accent)" : "transparent",
-              fontWeight: active ? 600 : 400,
-            }}
-          >
-            {item.label}
-          </Link>
+          <div key={item.href}>
+            {item.href === "/guia" && <div className="my-2 border-t" style={{ borderColor: "var(--border)" }} />}
+            <Link
+              href={item.href}
+              className="flex items-center justify-between rounded-[3px] px-3 py-2 text-sm transition-colors"
+              style={{
+                color: active ? "var(--accent-ink)" : "var(--ink-2)",
+                background: active ? "var(--accent)" : "transparent",
+                fontWeight: active ? 600 : 400,
+              }}
+            >
+              {item.href === "/guia" ? "❓ Guía" : item.label}
+            </Link>
+          </div>
         );
       })}
     </aside>
