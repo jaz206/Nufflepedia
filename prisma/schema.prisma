@@ -693,6 +693,33 @@ model MasterPlayerState {
   updatedAt   DateTime @updatedAt
 }
 
+/// Tarjetas de la página /guia (qué es y para qué sirve cada apartado del
+/// menú lateral) — contenido de la propia app, no reglas oficiales, pero
+/// editable desde /admin igual que el resto para poder corregir el texto
+/// sin desplegar código. emoji/href/color son estructurales (enlazan a una
+/// ruta real) y no se editan desde el admin, solo title/description.
+model MasterGuideSection {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  emoji       String
+  title       String
+  href        String
+  color       String
+  description String
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+/// Preguntas frecuentes de la página /guia.
+model MasterGuideFaq {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Razas / plantillas oficiales (Fase 1). Ver docs/RACES_DATA_MODEL.md.
 // ─────────────────────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ export default async function AdminHome() {
     kickoffCount,
     injuryCount,
     matchStepCount,
+    guideSectionCount,
   ] = await Promise.all([
     prisma.masterSkill.count(),
     prisma.masterTrait.count(),
@@ -22,6 +23,7 @@ export default async function AdminHome() {
     prisma.masterKickoffEntry.count(),
     prisma.masterInjuryEntry.count(),
     prisma.masterMatchStep.count(),
+    prisma.masterGuideSection.count(),
   ]);
 
   const cards = [
@@ -34,6 +36,7 @@ export default async function AdminHome() {
     { href: "/admin/tables", label: "Patada Inicial", count: kickoffCount },
     { href: "/admin/tables", label: "Lesiones D16", count: injuryCount },
     { href: "/admin/partido", label: "Pasos de Secuencia de Partido", count: matchStepCount },
+    { href: "/admin/guia", label: "Tarjetas de la Guía", count: guideSectionCount },
   ];
 
   return (

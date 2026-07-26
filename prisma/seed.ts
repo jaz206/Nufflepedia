@@ -15,6 +15,7 @@ import { MATCH_SEQUENCE } from "../src/rules-engine/data/matchSequence";
 import { INDUCEMENTS_TABLE } from "../src/rules-engine/data/tables/inducements";
 import { SPECIAL_RULES_TABLE } from "../src/rules-engine/data/tables/specialRules";
 import { PLAYER_STATES_TABLE } from "../src/rules-engine/data/tables/playerStates";
+import { GUIDE_SECTIONS, GUIDE_FAQ } from "./guideData";
 
 const prisma = new PrismaClient();
 
@@ -236,6 +237,24 @@ async function main() {
       where: { key: entry.key },
       update: { name: entry.name, description: entry.description, sortOrder: entry.sortOrder },
       create: { key: entry.key, name: entry.name, description: entry.description, sortOrder: entry.sortOrder },
+    });
+  }
+
+  console.log(`Sembrando tarjetas de la Guía (${GUIDE_SECTIONS.length} filas)...`);
+  for (const entry of GUIDE_SECTIONS) {
+    await prisma.masterGuideSection.upsert({
+      where: { key: entry.key },
+      update: { emoji: entry.emoji, title: entry.title, href: entry.href, color: entry.color, description: entry.description, sortOrder: entry.sortOrder },
+      create: { key: entry.key, emoji: entry.emoji, title: entry.title, href: entry.href, color: entry.color, description: entry.description, sortOrder: entry.sortOrder },
+    });
+  }
+
+  console.log(`Sembrando FAQ de la Guía (${GUIDE_FAQ.length} filas)...`);
+  for (const entry of GUIDE_FAQ) {
+    await prisma.masterGuideFaq.upsert({
+      where: { key: entry.key },
+      update: { question: entry.question, answer: entry.answer, sortOrder: entry.sortOrder },
+      create: { key: entry.key, question: entry.question, answer: entry.answer, sortOrder: entry.sortOrder },
     });
   }
 
