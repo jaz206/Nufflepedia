@@ -11,6 +11,9 @@ import {
   startSecondHalf,
   finishLiveMatch,
 } from "../actions";
+import { statLine, effectiveStats, type StatBlock } from "@/lib/playerStats";
+import { buildSkillInfoIndex } from "@/lib/resolveSkillName";
+import SkillPillList, { type SkillInfo } from "@/components/SkillPillList";
 
 type Side = "home" | "away";
 type LiveEventType = Parameters<typeof logLiveMatchEvent>[1]["type"];
@@ -22,6 +25,14 @@ interface Player {
   customName: string;
   status: PlayerStatus;
   spp: number;
+  maIncreases: number;
+  stIncreases: number;
+  agIncreases: number;
+  paIncreases: number;
+  avIncreases: number;
+  skills: { skillKey: string; source: string }[];
+  position: (StatBlock & { id: string; name: string; startingSkillKeys: string[] }) | null;
+  star: (StatBlock & { key: string; name: string; skillKeys: string[] }) | null;
 }
 interface TeamSide {
   entryId: string;
@@ -70,6 +81,7 @@ export default function LiveMatchBoard({
   kickoffEvents,
   prayers,
   injuryCatalog,
+  skillCatalog,
 }: {
   liveMatch: {
     id: string;
@@ -93,6 +105,7 @@ export default function LiveMatchBoard({
   kickoffEvents: TableEntry[];
   prayers: TableEntry[];
   injuryCatalog: InjuryEntry[];
+  skillCatalog: SkillInfo[];
 }) {
   if (liveMatch.status === "PRE_MATCH") {
     return <PreMatchStage liveMatch={liveMatch} homeTeam={homeTeam} awayTeam={awayTeam} weather={weather} />;
@@ -110,7 +123,60 @@ export default function LiveMatchBoard({
       kickoffEvents={kickoffEvents}
       prayers={prayers}
       injuryCatalog={injuryCatalog}
+      skillCatalog={skillCatalog}
     />
+  );
+}
+
+/** Botón de control con una explicación breve debajo, para que quien lo usa vaya aprendiendo qué hace cada cosa. */
+function ControlButton({
+  children,
+  onClick,
+  disabled,
+  primary,
+  hint,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+  hint: string;
+}) {
+  return (
+    <div className="flex w-36 flex-col gap-1">
+      <button type="button" onClick={onClick} disabled={disabled} className={primary ? "btn-primary" : "btn-secondary"}>
+        {children}
+      </button>
+      <p className="text-[10px] leading-tight" style={{ color: "var(--ink-3)" }}>
+        {hint}
+      </p>
+    </div>
+  );
+}
+
+/** Botón de acción de jugador, con una explicación de a qué afecta justo debajo. */
+function ActionButton({
+  children,
+  onClick,
+  disabled,
+  primary,
+  hint,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+  hint: string;
+}) {
+  return (
+    <div>
+      <button type="button" onClick={onClick} disabled={disabled} className={primary ? "btn-primary w-full" : "btn-secondary w-full"}>
+        {children}
+      </button>
+      <p className="mt-0.5 text-[10px] leading-tight" style={{ color: "var(--ink-3)" }}>
+        {hint}
+      </p>
+    </div>
   );
 }
 
@@ -273,6 +339,7 @@ function InProgressStage({
   kickoffEvents,
   prayers,
   injuryCatalog,
+  skillCatalog,
 }: {
   liveMatch: {
     id: string;
@@ -292,6 +359,7 @@ function InProgressStage({
   kickoffEvents: TableEntry[];
   prayers: TableEntry[];
   injuryCatalog: InjuryEntry[];
+  skillCatalog: SkillInfo[];
 }) {
   const [selected, setSelected] = useState<Selected | null>(null);
   const [pendingInjury, setPendingInjury] = useState<{ attackerSide: Side; attackerPlayer: Player } | null>(null);
@@ -308,6 +376,32 @@ function InProgressStage({
   const entryIdOf = (side: Side) => (side === "home" ? liveMatch.homeEntryId : liveMatch.awayEntryId);
   const teamOf = (side: Side) => (side === "home" ? homeTeam : awayTeam);
   const otherSide = (side: Side): Side => (side === "home" ? "away" : "home");
+
+  const skillIndex = useMemo(() => buildSkillInfoIndex(skillCatalog), [skillCatalog]);
+  const skillNameByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of skillCatalog) if (s.key) map.set(s.key, s.name);
+    return map;
+  }, [skillCatalog]);
+
+  function statsFor(p: Player) {
+    const base = p.position ?? p.star;
+    return base ? effectiveStats(base, p) : null;
+  }
+  function skillNamesFor(p: Player) {
+    const baseNames = p.position?.startingSkillKeys ?? p.star?.skillKeys ?? [];
+    const levelUpNames = p.skills.filter((s) => s.source === "LEVEL_UP").map((s) => skillNameByKey.get(s.skillKey) ?? s.skillKey);
+    return [...baseNames, ...levelUpNames];
+  }
+  function tallyFor(playerId: string) {
+    return {
+      td: events.filter((e) => e.type === "TOUCHDOWN" && e.playerId === playerId).length,
+      pass: events.filter((e) => e.type === "COMPLETED_PASS" && e.playerId === playerId).length,
+      int: events.filter((e) => e.type === "INTERCEPTION" && e.playerId === playerId).length,
+      cas: events.filter((e) => e.type === "CASUALTY" && e.playerId === playerId).length,
+      injured: events.filter((e) => e.type === "CASUALTY" && e.opponentPlayerId === playerId).length,
+    };
+  }
 
   function fire(input: Parameters<typeof logLiveMatchEvent>[1]) {
     setError(undefined);
@@ -403,23 +497,23 @@ function InProgressStage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={nextTurn} disabled={pending} className="btn-secondary">
+            <ControlButton onClick={nextTurn} disabled={pending} hint="Avanza el contador cuando el equipo activo pierde el balón o termina de jugar — no toca el marcador.">
               Cambio de turno
-            </button>
+            </ControlButton>
             {liveMatch.half === 1 && (
-              <button type="button" onClick={secondHalf} disabled={pending} className="btn-secondary">
+              <ControlButton onClick={secondHalf} disabled={pending} hint="Solo al acabar los 8 turnos de la 1ª parte — reinicia el turno a 1 e intercambia quién patea.">
                 Empezar 2ª parte
-              </button>
+              </ControlButton>
             )}
-            <button type="button" onClick={() => setShowKickoffPicker((v) => !v)} disabled={pending} className="btn-secondary">
+            <ControlButton onClick={() => setShowKickoffPicker((v) => !v)} disabled={pending} hint="2D6 tras cada patada (inicio de entrada, o justo después de un touchdown).">
               Evento de Patada Inicial
-            </button>
-            <button type="button" onClick={() => setShowPrayerPicker((v) => !v)} disabled={pending} className="btn-secondary">
+            </ControlButton>
+            <ControlButton onClick={() => setShowPrayerPicker((v) => !v)} disabled={pending} hint="Solo si un equipo despliega con 2+ jugadores menos que el rival.">
               Plegaria a Nuffle
-            </button>
-            <button type="button" onClick={finish} disabled={pending} className="btn-primary">
+            </ControlButton>
+            <ControlButton onClick={finish} disabled={pending} primary hint="Cierra el partido, genera la crónica y aplica PE/lesiones a la plantilla real — no se puede deshacer.">
               Finalizar partido
-            </button>
+            </ControlButton>
           </div>
         </div>
         {showKickoffPicker && (
@@ -482,42 +576,72 @@ function InProgressStage({
             </Panel>
           ) : selected ? (
             <Panel>
-              <p className="mb-1 text-sm font-semibold">
-                #{selected.player.number} {selected.player.customName}
-              </p>
-              <p className="mb-3 text-xs" style={{ color: "var(--ink-3)" }}>
-                {teamOf(selected.side).teamName} · {STATUS_LABEL[selected.player.status]} · {selected.player.spp} PE
-              </p>
-              <div className="flex flex-col gap-2">
-                <button type="button" onClick={() => quickAction("TOUCHDOWN")} disabled={pending} className="btn-primary">
+              {(() => {
+                const stats = statsFor(selected.player);
+                const skillNames = skillNamesFor(selected.player);
+                const tally = tallyFor(selected.player.id);
+                const positionLabel = selected.player.position?.name ?? (selected.player.star ? "Jugador Estrella" : null);
+                return (
+                  <>
+                    <p className="text-sm font-semibold">
+                      #{selected.player.number} {selected.player.customName}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--ink-3)" }}>
+                      {teamOf(selected.side).teamName}
+                      {positionLabel && <> · {positionLabel}</>} · {STATUS_LABEL[selected.player.status]} · {selected.player.spp} PE
+                    </p>
+                    {stats && (
+                      <p className="mt-1 font-mono text-xs" style={{ color: "var(--ink-2)" }}>
+                        {statLine(stats)}
+                      </p>
+                    )}
+                    <SkillPillList names={skillNames} index={skillIndex} />
+                    {(tally.td > 0 || tally.pass > 0 || tally.int > 0 || tally.cas > 0 || tally.injured > 0) && (
+                      <p className="mt-2 text-xs" style={{ color: "var(--gold)" }}>
+                        Este partido:{" "}
+                        {[
+                          tally.td > 0 && `${tally.td} TD`,
+                          tally.pass > 0 && `${tally.pass} pase(s)`,
+                          tally.int > 0 && `${tally.int} intercepción(es)`,
+                          tally.cas > 0 && `${tally.cas} baja(s) causada(s)`,
+                          tally.injured > 0 && `${tally.injured} baja(s) recibida(s)`,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
+              <div className="mt-3 flex flex-col gap-2">
+                <ActionButton onClick={() => quickAction("TOUCHDOWN")} disabled={pending} primary hint="+1 al marcador de su equipo y 3 PE para este jugador.">
                   Touchdown
-                </button>
-                <button type="button" onClick={() => quickAction("COMPLETED_PASS")} disabled={pending} className="btn-secondary">
+                </ActionButton>
+                <ActionButton onClick={() => quickAction("COMPLETED_PASS")} disabled={pending} hint="1 PE — se anota en quien lanza el pase, no en quien lo recibe.">
                   Pase completado
-                </button>
-                <button type="button" onClick={() => quickAction("INTERCEPTION")} disabled={pending} className="btn-secondary">
+                </ActionButton>
+                <ActionButton onClick={() => quickAction("INTERCEPTION")} disabled={pending} hint="2 PE para el jugador que intercepta.">
                   Intercepción
-                </button>
-                <button type="button" onClick={startInjury} disabled={pending} className="btn-secondary">
+                </ActionButton>
+                <ActionButton onClick={startInjury} disabled={pending} hint="2 PE para el agresor — a continuación eliges quién la recibe y el resultado de la Tabla de Lesiones.">
                   Causó una baja
-                </button>
-                <button type="button" onClick={() => quickAction("SENT_OFF")} disabled={pending} className="btn-secondary">
+                </ActionButton>
+                <ActionButton onClick={() => quickAction("SENT_OFF")} disabled={pending} hint="Se pierde el resto del partido (doble en Armadura/Heridas, o Arma secreta).">
                   Expulsión
-                </button>
-                <button type="button" onClick={() => quickAction("APOTHECARY_USED")} disabled={pending} className="btn-secondary">
+                </ActionButton>
+                <ActionButton onClick={() => quickAction("APOTHECARY_USED")} disabled={pending} hint="Una vez por partido y equipo — repite la tirada de Lesiones de un jugador K.O./lesionado.">
                   Usar apotecario
-                </button>
-                <button type="button" onClick={() => quickAction("KO_RECOVERY")} disabled={pending} className="btn-secondary">
+                </ActionButton>
+                <ActionButton onClick={() => quickAction("KO_RECOVERY")} disabled={pending} hint="Tirada de 1D6 al final de la entrada — con 4+ vuelve a Reservas.">
                   Recuperación K.O.
-                </button>
-                <button
-                  type="button"
+                </ActionButton>
+                <ActionButton
                   onClick={() => toggleBench(selected.player.id, selected.side)}
                   disabled={pending}
-                  className="btn-secondary"
+                  hint="Solo para llevar la cuenta visualmente durante el partido — no afecta al resultado final."
                 >
                   {onBench.has(selected.player.id) ? "Meter en el campo" : "Sacar al banquillo"}
-                </button>
+                </ActionButton>
               </div>
             </Panel>
           ) : (
