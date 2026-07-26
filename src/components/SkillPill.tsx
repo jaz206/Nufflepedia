@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * Componente del inventario de DESIGN_SYSTEM.md §7: nombre de habilidad
@@ -24,17 +24,24 @@ export default function SkillPill({
   const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
   const tooltipId = useId();
   const anchorRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
 
-  function show() {
-    // Si no cabe debajo (ej. está cerca del borde inferior de un modal o de
-    // la ventana), la abre hacia arriba en su lugar.
-    const rect = anchorRef.current?.getBoundingClientRect();
-    const estimatedHeight = 160;
-    if (rect && window.innerHeight - rect.bottom < estimatedHeight && rect.top > estimatedHeight) {
+  // Mide la altura REAL del tooltip ya renderizado (no una estimación) y lo
+  // voltea hacia arriba si no cabe hacia abajo — se corrige antes de pintar,
+  // así que no hay parpadeo visible.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const rect = tooltipRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    if (rect.bottom > window.innerHeight && rect.top - rect.height > 0) {
       setPlacement("top");
-    } else {
+    } else if (rect.top < 0) {
       setPlacement("bottom");
     }
+  }, [open]);
+
+  function show() {
+    setPlacement("bottom");
     setOpen(true);
   }
 
@@ -63,6 +70,7 @@ export default function SkillPill({
 
       {open && description && (
         <span
+          ref={tooltipRef}
           id={tooltipId}
           role="tooltip"
           onMouseEnter={() => setOpen(true)}
