@@ -249,8 +249,12 @@ function PreMatchStage({
 
       <Panel>
         <h2 className="mb-2 font-semibold">1. Factor de Hinchas</h2>
-        <p className="mb-2 text-xs" style={{ color: "var(--ink-3)" }}>
+        <p className="mb-1 text-xs" style={{ color: "var(--ink-3)" }}>
           Tira 1D3 por cada equipo y súmalo al valor de Hinchas de su Hoja de plantilla.
+        </p>
+        <p className="mb-2 text-xs italic" style={{ color: "var(--ink-3)" }}>
+          A qué afecta: a los eventos de Patada Inicial que dependen de Hinchas (ej. «Los hinchas animan», «Invasión de
+          campo») y, en liga, a las ganancias tras el partido.
         </p>
         <div className="flex flex-wrap items-end gap-3">
           <label className="text-sm">
@@ -270,8 +274,12 @@ function PreMatchStage({
 
       <Panel>
         <h2 className="mb-2 font-semibold">2. Clima</h2>
-        <p className="mb-2 text-xs" style={{ color: "var(--ink-3)" }}>
+        <p className="mb-1 text-xs" style={{ color: "var(--ink-3)" }}>
           Cada Entrenador tira 1D6, sumad los resultados y consultad la tabla.
+        </p>
+        <p className="mb-2 text-xs italic" style={{ color: "var(--ink-3)" }}>
+          A qué afecta: se queda fijo todo el partido y su efecto se aplica desde ya (ej. «Muy Soleado» penaliza los
+          Pases; «Ventisca» solo deja Pases cortos).
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <select className="input flex-1" value={weatherId} onChange={(e) => setWeatherId(e.target.value)}>
@@ -287,12 +295,21 @@ function PreMatchStage({
           </button>
           {liveMatch.weatherCode && <span className="text-xs" style={{ color: "var(--ok)" }}>✓ guardado</span>}
         </div>
+        {weatherId && (
+          <p className="mt-2 text-xs" style={{ color: "var(--ink-2)" }}>
+            {weather.find((w) => w.id === weatherId)?.effect}
+          </p>
+        )}
       </Panel>
 
       <Panel>
         <h2 className="mb-2 font-semibold">3. Equipo pateador</h2>
-        <p className="mb-2 text-xs" style={{ color: "var(--ink-3)" }}>
+        <p className="mb-1 text-xs" style={{ color: "var(--ink-3)" }}>
           Tirada enfrentada — quien saque más alto decide quién patea y quién recibe.
+        </p>
+        <p className="mb-2 text-xs italic" style={{ color: "var(--ink-3)" }}>
+          A qué afecta: el equipo pateador se despliega primero y chuta el balón hacia el receptor — el pateador
+          defiende, el receptor ataca con el balón esta entrada.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <select className="input flex-1" value={kickingId} onChange={(e) => setKickingId(e.target.value)}>
@@ -309,14 +326,20 @@ function PreMatchStage({
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <button
-        type="button"
-        onClick={begin}
-        disabled={pending || !liveMatch.weatherCode || !liveMatch.kickingEntryId}
-        className="btn-primary"
-      >
-        Empezar el partido
-      </button>
+      <div>
+        <button
+          type="button"
+          onClick={begin}
+          disabled={pending || !liveMatch.weatherCode || !liveMatch.kickingEntryId}
+          className="btn-primary"
+        >
+          Empezar el partido
+        </button>
+        <p className="mt-1 text-xs" style={{ color: "var(--ink-3)" }}>
+          A partir de aquí se abre el marcador y podrás registrar Touchdowns, bajas, cambios de turno y todo lo demás
+          en vivo.
+        </p>
+      </div>
     </div>
   );
 }
@@ -815,18 +838,34 @@ function FinishedStage({
 }) {
   const touchdowns = events.filter((e) => e.type === "TOUCHDOWN").length;
   const casualties = events.filter((e) => e.type === "CASUALTY").length;
+  const passes = events.filter((e) => e.type === "COMPLETED_PASS").length;
+  const interceptions = events.filter((e) => e.type === "INTERCEPTION").length;
+  const winner =
+    liveMatch.homeScore === liveMatch.awayScore ? null : liveMatch.homeScore > liveMatch.awayScore ? homeTeam.teamName : awayTeam.teamName;
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 px-6 py-10">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">Partido finalizado</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--ink-3)" }}>
+          Este partido ya está cerrado — no se puede reabrir ni editar. Si algo se registró mal, dínoslo y lo
+          corregimos a mano.
+        </p>
       </header>
       <Panel>
-        <p className="mb-2 text-lg font-semibold">
+        <p className="mb-1 text-lg font-semibold">
           {homeTeam.teamName} {liveMatch.homeScore} — {liveMatch.awayScore} {awayTeam.teamName}
         </p>
+        <p className="mb-3 text-sm" style={{ color: winner ? "var(--gold)" : "var(--ink-3)" }}>
+          {winner ? `Gana ${winner}.` : "Empate."}
+        </p>
         <p className="text-sm" style={{ color: "var(--ink-3)" }}>
-          {touchdowns} touchdown(s) registrados · {casualties} baja(s) registradas. El resultado ya se ha aplicado a la
-          plantilla real de ambos equipos (PE, tesorería y lesiones).
+          {touchdowns} touchdown(s) · {passes} pase(s) completado(s) · {interceptions} intercepción(es) ·{" "}
+          {casualties} baja(s) registrada(s).
+        </p>
+        <p className="mt-2 text-xs italic" style={{ color: "var(--ink-3)" }}>
+          A qué afecta: cada evento ya ha repartido sus PE (Puntos de Estrellato), y cada baja con secuela ha
+          actualizado el estado del jugador — todo esto se aplicó directamente a la plantilla real de El Cuartel de
+          ambos equipos, no a una copia.
         </p>
       </Panel>
       <EventLog events={events} homeTeam={homeTeam} awayTeam={awayTeam} homeEntryId={homeTeam.entryId} />
