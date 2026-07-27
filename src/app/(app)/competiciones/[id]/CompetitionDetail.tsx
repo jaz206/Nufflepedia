@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
   joinCompetition,
@@ -276,6 +277,7 @@ export default function CompetitionDetail({
 
   const isTournament = competition.format === "TOURNAMENT";
   const notStarted = competition.status === "OPEN";
+  const hasMagazineAccess = isCommissioner || myEntryIds.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-10">
@@ -288,6 +290,11 @@ export default function CompetitionDetail({
             {entries.length}/{competition.maxTeams} equipos · {competition.visibility === "PUBLIC" ? "Pública" : "Privada"} ·
             Comisario: {competition.commissionerName}
           </p>
+          {hasMagazineAccess && (
+            <Link href={`/competiciones/${competition.id}/balonazo`} className="mt-2 inline-block text-sm hover:underline" style={{ color: "var(--gold)" }}>
+              📰 Balonazo Sangriento
+            </Link>
+          )}
         </div>
         {isCommissioner && (
           <div className="flex flex-wrap gap-2">

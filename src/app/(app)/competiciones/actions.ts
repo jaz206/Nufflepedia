@@ -16,6 +16,7 @@ import {
 import { applyBoxScore, countCasualtiesBy } from "./boxScore";
 import { cloneRosterIntoEntry } from "./rosterSnapshot";
 import { validateInducementPurchases, createInducementPurchases, type EntryForInducements } from "./inducements";
+import { generateMagazineIssue, leagueRoundReportIdsIfComplete, bracketRoundLabel, bracketRoundReportIds } from "./magazine";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -302,7 +303,21 @@ export async function closeGroupStage(competitionId: string): Promise<ActionResu
     data: { phase: "KNOCKOUT", bracket: bracket as never },
   });
 
+  const groupReports = await prisma.matchReport.findMany({
+    where: { competitionId, source: "GROUP" },
+    select: { id: true },
+  });
+  if (groupReports.length > 0) {
+    await generateMagazineIssue({
+      competitionId,
+      kind: "GROUP_STAGE",
+      label: "Fase de grupos",
+      matchReportIds: groupReports.map((r) => r.id),
+    });
+  }
+
   revalidatePath(`/competiciones/${competitionId}`);
+  revalidatePath(`/competiciones/${competitionId}/balonazo`);
   revalidatePath("/dashboard");
   return { ok: true };
 }
@@ -410,7 +425,18 @@ export async function recordFixtureResult(
     );
   });
 
+  const reportIds = await leagueRoundReportIdsIfComplete(fixture.competitionId, fixture.round);
+  if (reportIds) {
+    await generateMagazineIssue({
+      competitionId: fixture.competitionId,
+      kind: "ROUND",
+      label: `Jornada ${fixture.round}`,
+      matchReportIds: reportIds,
+    });
+  }
+
   revalidatePath(`/competiciones/${fixture.competitionId}`);
+  revalidatePath(`/competiciones/${fixture.competitionId}/balonazo`);
   revalidatePath("/dashboard");
   return { ok: true };
 }
@@ -622,7 +648,22 @@ export async function recordBracketResult(
     );
   });
 
+  const playedRound = rounds.find((r) => r.matches.some((m) => m.id === parsed.data.matchId));
+  const updatedRound = updatedBracket.find((r) => r.round === playedRound?.round);
+  if (updatedRound && updatedRound.matches.every((m) => m.winnerEntryId !== null)) {
+    const reportIds = await bracketRoundReportIds(competitionId, updatedRound.matches);
+    if (reportIds.length > 0) {
+      await generateMagazineIssue({
+        competitionId,
+        kind: "KNOCKOUT_ROUND",
+        label: bracketRoundLabel(updatedRound.round, updatedBracket.length),
+        matchReportIds: reportIds,
+      });
+    }
+  }
+
   revalidatePath(`/competiciones/${competitionId}`);
+  revalidatePath(`/competiciones/${competitionId}/balonazo`);
   revalidatePath("/dashboard");
   return { ok: true };
 }

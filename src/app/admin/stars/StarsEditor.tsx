@@ -160,6 +160,18 @@ function StarCard({ star }: { star: Star }) {
               }}
             />
           </label>
+          <label className="flex flex-col text-[10px] uppercase tracking-wide text-zinc-400">
+            Lore (biografía para &ldquo;Leyendas vivas&rdquo; en Balonazo Sangriento) — vacío = se genera sola la primera vez que se cite
+            <textarea
+              className="input mt-0.5 py-1 text-sm"
+              rows={4}
+              defaultValue={s.lore ?? ""}
+              onBlur={(e) => {
+                const v = e.target.value.trim() || null;
+                if (v !== s.lore) save({ lore: v });
+              }}
+            />
+          </label>
           {err && <p className="text-xs text-[var(--danger)]">{err}</p>}
         </div>
       )}

@@ -171,10 +171,11 @@ model Competition {
   /// grupos, "KNOCKOUT" una vez generado el cuadro. Null en formato Liguilla.
   phase         String?
 
-  entries      CompetitionEntry[]
-  invitations  Invitation[]
-  matchReports MatchReport[]
-  fixtures     CompetitionFixture[]
+  entries        CompetitionEntry[]
+  invitations    Invitation[]
+  matchReports   MatchReport[]
+  fixtures       CompetitionFixture[]
+  magazineIssues MagazineIssue[]
 
   @@index([commissionerId])
 }
@@ -786,8 +787,45 @@ model MasterStarPlayer {
   leagues         String[]
   specialRuleName String?
   specialRuleText String?
+  /// Trasfondo narrativo para "Leyendas vivas" (Balonazo Sangriento) —
+  /// generado con IA una sola vez y guardado aquí, editable desde
+  /// /admin/stars. Null hasta que se genera por primera vez.
+  lore            String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+/**
+ * Un número de Balonazo Sangriento: revista generada con IA a partir de
+ * datos reales de una jornada de liguilla terminada o una fase de torneo
+ * completada (grupos o una ronda del cuadro). Solo visible para los
+ * inscritos en la competición — ver requireEntrant en
+ * competiciones/magazine.ts. Cada sección se genera una vez y se guarda;
+ * releer el número no vuelve a llamar a la IA.
+ */
+model MagazineIssue {
+  id            String      @id @default(uuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  issueNumber   Int
+  /// "ROUND" (jornada de liguilla) | "GROUP_STAGE" | "KNOCKOUT_ROUND"
+  kind          String
+  /// Etiqueta legible: "Jornada 3", "Fase de grupos", "Cuartos de final"...
+  label         String
+
+  newsRoundup        String
+  featuredMatchTitle String
+  featuredMatchBody  String
+  nextTargetText      String
+  legendStarKey       String?
+  legendText          String
+  /// Clasificación en el momento de publicarse — congelada, no se
+  /// actualiza aunque la clasificación real siga evolucionando después.
+  standings     Json
+  createdAt     DateTime    @default(now())
+
+  @@unique([competitionId, issueNumber])
+  @@index([competitionId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────

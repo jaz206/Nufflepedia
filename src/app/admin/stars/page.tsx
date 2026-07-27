@@ -21,6 +21,7 @@ export default async function AdminStarsPage() {
         leagues: s.leagues,
         specialRuleName: s.specialRuleName,
         specialRuleText: s.specialRuleText,
+        lore: s.lore,
       }))}
     />
   );

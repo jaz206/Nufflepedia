@@ -25,6 +25,7 @@ const starSchema = z.object({
   leagues: z.array(z.string()),
   specialRuleName: z.string().nullable(),
   specialRuleText: z.string().nullable(),
+  lore: z.string().nullable(),
 });
 export type StarInput = z.infer<typeof starSchema>;
 
