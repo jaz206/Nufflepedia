@@ -226,23 +226,3 @@ h3 {
     opacity: 0.5;
   }
 }
-
-/* Heraldo de Nuffle (Dashboard): barra que se llena mientras dura la
-   estrella en pantalla, antes de rotar a la siguiente. */
-@keyframes heraldo-progress {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
-}
-.heraldo-progress-bar {
-  animation: heraldo-progress 30s linear forwards;
-}
-@media (prefers-reduced-motion: reduce) {
-  .heraldo-progress-bar {
-    animation: none;
-    width: 100%;
-  }
-}

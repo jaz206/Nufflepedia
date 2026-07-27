@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { buildSkillInfoIndex } from "@/lib/resolveSkillName";
 import SkillPillList, { type SkillInfo } from "@/components/SkillPillList";
 
@@ -17,14 +17,14 @@ interface Star {
   skillKeys: string[];
   specialRuleName: string | null;
   specialRuleText: string | null;
+  lore: string | null;
 }
 
-const ROTATE_MS = 30_000;
-
 /**
- * Gaceta rotativa de Jugadores Estrella: cambia de protagonista cada 30s.
- * Solo depende de MasterStarPlayer (Fase 1, ya disponible) — no de equipos
- * ni de partidos, así que puede vivir en el Dashboard desde ya.
+ * Gaceta de Jugadores Estrella: navegación manual (anterior/siguiente/
+ * aleatoria) entre las 68 fichas, con su biografía cuando ya se ha
+ * generado. Solo depende de MasterStarPlayer — no de equipos ni de
+ * partidos, así que puede vivir en el Dashboard desde ya.
  */
 export default function HeraldoDeNuffle({
   stars,
@@ -38,16 +38,20 @@ export default function HeraldoDeNuffle({
   const [index, setIndex] = useState(0);
   const skillIndex = useMemo(() => buildSkillInfoIndex([...skills, ...traits]), [skills, traits]);
 
-  useEffect(() => {
-    if (stars.length <= 1) return;
-    const timer = setInterval(() => {
-      setIndex((i) => (i + 1) % stars.length);
-    }, ROTATE_MS);
-    return () => clearInterval(timer);
-  }, [stars.length]);
-
   if (stars.length === 0) return null;
   const star = stars[index];
+
+  function go(delta: number) {
+    setIndex((i) => (i + delta + stars.length) % stars.length);
+  }
+  function random() {
+    if (stars.length <= 1) return;
+    setIndex((i) => {
+      let next = Math.floor(Math.random() * stars.length);
+      if (next === i) next = (next + 1) % stars.length;
+      return next;
+    });
+  }
 
   return (
     <section>
@@ -63,8 +67,7 @@ export default function HeraldoDeNuffle({
       {/*
         Sin overflow-hidden a propósito: recortaría el tooltip de SkillPill
         en cuanto se abriera. Las esquinas redondeadas se replican a mano en
-        la cabecera y la barra de progreso (primer/último hijo) en vez de
-        depender de recortar el contenedor entero.
+        la cabecera en vez de depender de recortar el contenedor entero.
       */}
       <article
         className="rounded-[3px] border"
@@ -125,12 +128,33 @@ export default function HeraldoDeNuffle({
                 )}
               </p>
             )}
+
+            {star.lore ? (
+              <p className="mt-3 border-t pt-3 text-sm leading-relaxed" style={{ borderColor: "var(--border)", color: "var(--ink-2)" }}>
+                {star.lore}
+              </p>
+            ) : (
+              <p className="mt-3 border-t pt-3 text-xs italic" style={{ borderColor: "var(--border)", color: "var(--ink-3)" }}>
+                Todavía no tiene biografía — está pendiente de generarse.
+              </p>
+            )}
           </div>
         </div>
 
         {stars.length > 1 && (
-          <div className="h-1 overflow-hidden rounded-b-[2px]" style={{ background: "var(--surface-2)" }}>
-            <div key={index} className="heraldo-progress-bar h-full" style={{ background: "var(--gold)" }} />
+          <div
+            className="flex items-center justify-between gap-2 rounded-b-[2px] border-t px-4 py-2"
+            style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
+          >
+            <button type="button" onClick={() => go(-1)} className="btn-secondary px-3 py-1 text-xs">
+              ← Anterior
+            </button>
+            <button type="button" onClick={random} className="text-xs hover:underline" style={{ color: "var(--ink-3)" }}>
+              🎲 Al azar
+            </button>
+            <button type="button" onClick={() => go(1)} className="btn-secondary px-3 py-1 text-xs">
+              Siguiente →
+            </button>
           </div>
         )}
       </article>
