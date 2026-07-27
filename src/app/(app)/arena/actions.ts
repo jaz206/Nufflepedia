@@ -293,72 +293,79 @@ export async function finishLiveMatch(liveMatchId: string): Promise<{ ok: true; 
     });
 
   let matchReportId = "";
-  await prisma.$transaction(async (tx) => {
-    const report = await tx.matchReport.create({
-      data: {
-        competitionId: null,
-        homeEntryId: liveMatch.homeEntryId,
-        awayEntryId: liveMatch.awayEntryId,
-        homeScore: liveMatch.homeScore,
-        awayScore: liveMatch.awayScore,
-        source: "FRIENDLY",
-      },
-    });
-    matchReportId = report.id;
-
-    await applyBoxScore(
-      tx,
-      report.id,
-      {
-        competitionId: null,
-        homeEntryId: liveMatch.homeEntryId,
-        homeTeamName: liveMatch.homeEntry.teamName,
-        awayEntryId: liveMatch.awayEntryId,
-        awayTeamName: liveMatch.awayEntry.teamName,
-        homeScore: liveMatch.homeScore,
-        awayScore: liveMatch.awayScore,
-      },
-      scorers,
-      injuries
-    );
-
-    // Pase completado / Intercepción: reparten PE pero no forman parte del
-    // box score de competiciones (que solo conoce goles y bajas) — se
-    // aplican aquí directamente sobre la misma tabla de PE.
-    const passValue = await tx.masterSppValue.findUnique({ where: { actionKey: "PASS_COMPLETE" } });
-    const interceptionValue = await tx.masterSppValue.findUnique({ where: { actionKey: "INTERCEPTION" } });
-    for (const e of liveMatch.events) {
-      if (e.type === "COMPLETED_PASS" && e.playerId && passValue) {
-        await tx.competitionPlayer.update({ where: { id: e.playerId }, data: { spp: { increment: passValue.standardValue } } });
-      }
-      if (e.type === "INTERCEPTION" && e.playerId && interceptionValue) {
-        await tx.competitionPlayer.update({ where: { id: e.playerId }, data: { spp: { increment: interceptionValue.standardValue } } });
-      }
-    }
-
-    // Sincroniza la copia de trabajo de vuelta a la plantilla real — un
-    // amistoso sí hace progresar al equipo, a diferencia de una competición.
-    const allCompPlayers = await tx.competitionPlayer.findMany({
-      where: { entryId: { in: [liveMatch.homeEntryId, liveMatch.awayEntryId] } },
-    });
-    for (const cp of allCompPlayers) {
-      if (!cp.sourcePlayerId) continue;
-      await tx.managedPlayer.update({
-        where: { id: cp.sourcePlayerId },
+  await prisma.$transaction(
+    async (tx) => {
+      const report = await tx.matchReport.create({
         data: {
-          spp: cp.spp,
-          status: cp.status,
-          maIncreases: cp.maIncreases,
-          stIncreases: cp.stIncreases,
-          agIncreases: cp.agIncreases,
-          paIncreases: cp.paIncreases,
-          avIncreases: cp.avIncreases,
+          competitionId: null,
+          homeEntryId: liveMatch.homeEntryId,
+          awayEntryId: liveMatch.awayEntryId,
+          homeScore: liveMatch.homeScore,
+          awayScore: liveMatch.awayScore,
+          source: "FRIENDLY",
         },
       });
-    }
+      matchReportId = report.id;
 
-    await tx.liveMatch.update({ where: { id: liveMatchId }, data: { status: "FINISHED", matchReportId: report.id } });
-  });
+      await applyBoxScore(
+        tx,
+        report.id,
+        {
+          competitionId: null,
+          homeEntryId: liveMatch.homeEntryId,
+          homeTeamName: liveMatch.homeEntry.teamName,
+          awayEntryId: liveMatch.awayEntryId,
+          awayTeamName: liveMatch.awayEntry.teamName,
+          homeScore: liveMatch.homeScore,
+          awayScore: liveMatch.awayScore,
+        },
+        scorers,
+        injuries
+      );
+
+      // Pase completado / Intercepción: reparten PE pero no forman parte del
+      // box score de competiciones (que solo conoce goles y bajas) — se
+      // aplican aquí directamente sobre la misma tabla de PE.
+      const passValue = await tx.masterSppValue.findUnique({ where: { actionKey: "PASS_COMPLETE" } });
+      const interceptionValue = await tx.masterSppValue.findUnique({ where: { actionKey: "INTERCEPTION" } });
+      for (const e of liveMatch.events) {
+        if (e.type === "COMPLETED_PASS" && e.playerId && passValue) {
+          await tx.competitionPlayer.update({ where: { id: e.playerId }, data: { spp: { increment: passValue.standardValue } } });
+        }
+        if (e.type === "INTERCEPTION" && e.playerId && interceptionValue) {
+          await tx.competitionPlayer.update({ where: { id: e.playerId }, data: { spp: { increment: interceptionValue.standardValue } } });
+        }
+      }
+
+      // Sincroniza la copia de trabajo de vuelta a la plantilla real — un
+      // amistoso sí hace progresar al equipo, a diferencia de una competición.
+      const allCompPlayers = await tx.competitionPlayer.findMany({
+        where: { entryId: { in: [liveMatch.homeEntryId, liveMatch.awayEntryId] } },
+      });
+      for (const cp of allCompPlayers) {
+        if (!cp.sourcePlayerId) continue;
+        await tx.managedPlayer.update({
+          where: { id: cp.sourcePlayerId },
+          data: {
+            spp: cp.spp,
+            status: cp.status,
+            maIncreases: cp.maIncreases,
+            stIncreases: cp.stIncreases,
+            agIncreases: cp.agIncreases,
+            paIncreases: cp.paIncreases,
+            avIncreases: cp.avIncreases,
+          },
+        });
+      }
+
+      await tx.liveMatch.update({ where: { id: liveMatchId }, data: { status: "FINISHED", matchReportId: report.id } });
+    },
+    // De sobra para superar los 5s por defecto en un partido con muchos
+    // eventos, contra el pooler de Supabase en frío desde una función
+    // serverless de Vercel (mismo ajuste que ya lleva createFriendlyMatch
+    // más arriba en este mismo archivo).
+    { timeout: 20_000 }
+  );
 
   revalidatePath("/arena");
   revalidatePath("/dashboard");
