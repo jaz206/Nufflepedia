@@ -3,20 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/nufflepedia", label: "La Biblioteca" },
-  { href: "/nufflepedia/tablas", label: "Tablas" },
-  { href: "/nufflepedia/partido", label: "Secuencia de Partido" },
-  { href: "/equipos", label: "Equipos" },
-  { href: "/competiciones", label: "Competiciones Amateur" },
-  { href: "/torneos-presenciales", label: "Torneos Presenciales" },
-  { href: "/pizarra", label: "Pizarra" },
-  { href: "/arena", label: "Arena" },
-  { href: "/guia", label: "Guía" },
-];
+interface NavItem {
+  href: string;
+  label: string;
+}
 
-export default function Sidebar() {
+export default function Sidebar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
@@ -24,12 +16,12 @@ export default function Sidebar() {
       className="w-56 shrink-0 border-r px-3 py-6 hidden md:flex md:flex-col md:gap-1"
       style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
     >
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         // Resalta solo la entrada más específica que coincide (evita que
         // "La Biblioteca" y "Tablas" se marquen ambas activas a la vez en
         // /nufflepedia/tablas, ya que una es prefijo de la otra).
         const matches = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-        const mostSpecific = NAV_ITEMS.filter((i) => matches(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
+        const mostSpecific = items.filter((i) => matches(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
         const active = matches(item.href) && mostSpecific?.href === item.href;
         return (
           <div key={item.href}>
@@ -43,7 +35,7 @@ export default function Sidebar() {
                 fontWeight: active ? 600 : 400,
               }}
             >
-              {item.href === "/guia" ? "❓ Guía" : item.label}
+              {item.label}
             </Link>
           </div>
         );

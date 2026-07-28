@@ -16,6 +16,7 @@ import { INDUCEMENTS_TABLE } from "../src/rules-engine/data/tables/inducements";
 import { SPECIAL_RULES_TABLE } from "../src/rules-engine/data/tables/specialRules";
 import { PLAYER_STATES_TABLE } from "../src/rules-engine/data/tables/playerStates";
 import { GUIDE_SECTIONS, GUIDE_FAQ } from "./guideData";
+import { NAV_ITEMS } from "./navData";
 
 const prisma = new PrismaClient();
 
@@ -255,6 +256,15 @@ async function main() {
       where: { key: entry.key },
       update: { question: entry.question, answer: entry.answer, sortOrder: entry.sortOrder },
       create: { key: entry.key, question: entry.question, answer: entry.answer, sortOrder: entry.sortOrder },
+    });
+  }
+
+  console.log(`Sembrando menú lateral (${NAV_ITEMS.length} entradas)...`);
+  for (const entry of NAV_ITEMS) {
+    await prisma.masterNavItem.upsert({
+      where: { key: entry.key },
+      update: { href: entry.href, label: entry.label, sortOrder: entry.sortOrder },
+      create: { key: entry.key, href: entry.href, label: entry.label, sortOrder: entry.sortOrder },
     });
   }
 

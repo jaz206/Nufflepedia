@@ -961,3 +961,15 @@ model PresentialMatch {
 
   @@index([roundId])
 }
+
+/// Entradas del menú lateral — solo el texto es editable desde /admin/menu
+/// (href y orden son fijos, para no poder romper la navegación con un
+/// enlace mal escrito). Ver src/app/(app)/Sidebar.tsx.
+model MasterNavItem {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  href      String
+  label     String
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+}

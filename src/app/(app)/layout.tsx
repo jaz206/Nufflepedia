@@ -1,4 +1,5 @@
 import { requireUser } from "@/server/auth/requireUser";
+import { prisma } from "@/server/db/prisma";
 import Sidebar from "./Sidebar";
 
 /**
@@ -10,10 +11,11 @@ import Sidebar from "./Sidebar";
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   await requireUser();
+  const navItems = await prisma.masterNavItem.findMany({ orderBy: { sortOrder: "asc" }, select: { href: true, label: true } });
 
   return (
     <div className="flex flex-1 min-h-0">
-      <Sidebar />
+      <Sidebar items={navItems} />
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
