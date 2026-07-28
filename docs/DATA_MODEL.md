@@ -236,6 +236,66 @@ nivel — ver `ARCHITECTURE.md`) y se guarda en `MatchInjury.statLoss`. La
 app no decide esto sola: no hay tabla oficial de asignación
 lesión→atributo verificada con certeza en el repo.
 
+## Balonazo Sangriento (`MagazineIssue`) — 2026-07-28
+
+Revista de competición generada con IA (Gemini), un número por jornada de
+liga terminada, fase de grupos cerrada, o ronda de eliminatoria completada.
+Cada número guarda ya el texto final de sus 5 secciones (`newsRoundup`,
+`featuredMatchTitle`/`Body`, `nextTargetText`, `legendStarKey`/`legendText`)
+más una `standings` congelada en JSON (la clasificación en el momento de
+publicarse, no se actualiza después aunque la real siga cambiando) —
+releer un número no vuelve a llamar a la IA. Generación disparada desde
+`recordFixtureResult`/`closeGroupStage`/`recordBracketResult`
+(`competiciones/magazine.ts`), best-effort: cualquier fallo se traga y se
+registra en consola, nunca rompe el registro del resultado que lo dispara.
+`MasterStarPlayer.lore` (biografía para la sección "Leyendas vivas") se
+genera una sola vez por estrella y se reutiliza en los números siguientes;
+`prisma/gemini.ts`/`src/lib/gemini.ts` es la primera integración de IA
+generativa del proyecto (REST directa a `gemini-2.5-flash`, sin SDK).
+
+## Dificultad y estilo de juego de cada raza (`MasterRace.tier`/`playstyle`) — 2026-07-28
+
+`tier` (ya existía, sin usar) se reinterpretó como "dificultad recomendada
+para elegirla" (1 fácil – 5 difícil) y se le sumó `playstyle` (frase de
+estilo de juego). **Deliberadamente no es un tier competitivo oficial** —
+es guía propia para quien funda su primer equipo, transcrita a mano en
+`prisma/racePlaystyle.ts` (separado de `racesData.ts` a propósito: ese
+archivo es transcripción fiel del reglamento, esto es opinión del
+proyecto) para las 31 razas. Se muestra en `/equipos/nuevo` (tarjeta +
+ficha completa al pinchar) y `/nufflepedia/razas`; editable en
+`/admin/races`.
+
+## Torneos Presenciales (`PresentialTournament`/`Entrant`/`Round`/`Match`) — 2026-07-28
+
+Modelo deliberadamente separado de `Competition`/`CompetitionEntry`: un
+evento de un día con muchas mesas a la vez, no una temporada larga.
+`PresentialEntrant` es solo nombre + equipo + raza escritos a mano por el
+organizador — sin `User` ni `ManagedTeam` asociados, para que valga con
+gente que solo viene al torneo. **A propósito sin puntos/TD/bajas/nº de
+byes guardados en el propio inscrito**: la clasificación se calcula
+siempre en vivo agregando `PresentialMatch` (`src/lib/presentialStandings.ts`)
+para que nunca pueda desincronizarse de los resultados reales, ni haga
+falta lógica de "deshacer" al corregir un marcador. `PresentialMatch`
+tiene `entrantBId` nullable = bye (descanso, se abonan los puntos de
+victoria). El emparejamiento de cada ronda (`src/lib/swissPairing.ts`, sin
+dependencias, con tests) evita repetir rival cuando hay alternativa y
+reparte el bye priorizando a quien no haya descansado ya. `publicSlug`
+(UUID) es la clave de la pantalla pública sin login
+(`/torneo-en-directo/[slug]`). **Bug real encontrado antes de producción**:
+`PresentialMatch.entrantAId`/`entrantBId` no tenían `onDelete: Cascade`
+hacia `PresentialEntrant` — borrar un torneo con partidos ya jugados
+fallaba por violación de clave foránea; corregido en la migración
+`presential_match_cascade`.
+
+## Menú lateral editable (`MasterNavItem`) — 2026-07-28
+
+Las entradas del menú lateral, antes un array fijo en `Sidebar.tsx`, viven
+ahora en esta tabla (semilla en `prisma/navData.ts`). Solo `label` es
+editable desde `/admin/menu` — `href` y `sortOrder` se quedan fijos a
+propósito (evita que un despiste rompa la navegación). `AppLayout`
+((app)/layout.tsx) los consulta y se los pasa a `Sidebar` como prop; antes
+`Sidebar` era enteramente autónomo con la lista hardcodeada dentro.
+
 ## Nombres de jugador acordes a la raza real del puesto (2026-07-22)
 
 Al fichar (`addPlayer` en `equipos/actions.ts`), el nombre se genera con

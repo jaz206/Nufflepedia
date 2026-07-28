@@ -79,16 +79,22 @@ cada sección sin glosario:
 │                        personal de banquillo, Mercado de Estrellas
 │                        ("plays for"), plantilla editable (nombre/
 │                        dorsal), disolver equipo
-├── /competiciones      LA ARENA — ligas y torneos                [HECHO, Fase 3]
+├── /competiciones      COMPETICIONES AMATEUR — liga habitual de la peña [HECHO, Fase 3]
 │   ├── /               Mis ligas (activas) + Histórico + Descubrir públicas
 │   ├── /nueva           Liga o torneo (con/sin fase de grupos), pública/privada
-│   └── /[id]            Clasificación, calendario a doble vuelta (ligas),
-│                        cuadro de eliminatoria (torneos), plantilla-copia
-│                        aislada por competición, subida de nivel, fichajes
-│                        de Estrella solo-para-esta-competición, estadísticas
-│                        (goleadores/bajas/lesiones), crónica automática
+│   ├── /[id]            Clasificación, calendario a doble vuelta (ligas),
+│   │                    cuadro de eliminatoria (torneos), plantilla-copia
+│   │                    aislada por competición, subida de nivel, fichajes
+│   │                    de Estrella solo-para-esta-competición, estadísticas
+│   │                    (goleadores/bajas/lesiones), crónica automática
+│   └── /[id]/balonazo   Balonazo Sangriento — revista con IA por jornada
+│                        de liga o fase de torneo terminada        [HECHO, §11.7]
+├── /torneos-presenciales  TORNEOS PRESENCIALES — evento de un día con
+│                        muchas mesas: inscripción sin cuenta, emparejamiento
+│                        suizo, resultados centralizados, pantalla pública
+│                        sin login para proyectar                  [HECHO, §11.7]
 ├── /pizarra            Mesa Táctica (26×15, jugadas guardadas)  [placeholder, idea futura]
-├── /arena              Asistente de partido en vivo             [placeholder, Fase 4]
+├── /arena              Asistente de partido en vivo             [HECHO, Fase 4 — ver §11.5/§11.6]
 ├── /calculadoras       Probabilidades, incentivos               [Por hacer]
 ├── /admin              Contenido maestro (solo ADMIN)           [HECHO]
 └── /perfil             Cuenta, preferencias                     [Por hacer]
@@ -118,7 +124,7 @@ Reglas de navegación:
 | **1** | Nufflepedia completa | 29 razas, star players, buscador global, identidad visual v1, i18n de interfaz | Media | Fase 0 | ✅ HECHO — referencia completa usable y compartible |
 | **2** | Cuartel General | Constructor de equipos (presupuesto, VAE en vivo, validación de roster), Mercado de Estrellas, personal de banquillo, nombres por raza real del puesto | Media-Alta | Razas de F1 | ✅ HECHO (2026-07-22) — el usuario *guarda* algo suyo: retención. Quedan sueltos: Perfil de usuario, Calculadora de probabilidades, Ficha imprimible, Mejoras/nivel (ver tarjetas Trello) |
 | **3** | Arena (Competiciones) | Crear liga, invitar, calendario round-robin, clasificación, secuencia post-partido (SPP, ganancias, lesiones, mejoras) | Alta | Equipos de F2 | ✅ HECHO (2026-07-23) — ver §11.3. Ruta real: `/competiciones` (ver nota de nombres en §2) |
-| **4** | Asistente + IA | Registro de partido en vivo (Realtime), crónicas Jim & Bob generadas por IA, preguntas de reglas con IA (RAG sobre Nufflepedia) | Alta | F3 + log de eventos | El "wow": diferenciador absoluto |
+| **4** | Asistente + IA | Registro de partido en vivo, revista de competición con IA, preguntas de reglas con IA (RAG sobre Nufflepedia) | Alta | F3 + log de eventos | ✅ Asistente de partido en vivo (2026-07-26, §11.5/§11.6) y Balonazo Sangriento (2026-07-28, §11.7) HECHOS — la idea original de crónica Jim & Bob por partido se sustituyó por una revista por jornada/fase; RAG de reglas con IA sigue pendiente |
 | **5** | Comunidad | Perfiles públicos, compartir equipos por enlace/QR, exportar/imprimir hojas, logros | Media | F2-F3 | Crecimiento orgánico fuera del grupo |
 | **6** | Versión definitiva | PWA offline completa, API pública, rendimiento, accesibilidad AA, pulido final | Media | Todo | Producto "terminado" |
 
@@ -146,8 +152,9 @@ configurables · gaceta de liga.
 
 **Ideas futuras** (banco de ideas, sin compromiso):
 simulador de partidos · IA experta en reglas conversacional · API pública ·
-torneos suizos · integración con NAF rankings · marketplace de escudos ·
-modo espectador en vivo.
+integración con NAF rankings (envío de resultados) · marketplace de escudos ·
+modo espectador en vivo. (Torneos suizos: ✅ HECHO, ver §11.7 — Torneos
+Presenciales.)
 
 ---
 
@@ -623,6 +630,122 @@ inconsistencia de nombres: la tarjeta de `/competiciones` decía "La Arena
 (Competiciones)", reabriendo la confusión con el "Arena" real (Asistente de
 Partido en vivo) que el proyecto ya había resuelto antes (ver nota de
 nombres en §2) — se dejó solo como "Competiciones", igual que en el menú.
+
+### 11.7 Balonazo Sangriento, Torneos Presenciales y pulido general (2026-07-28)
+
+Sesión larga con varios bloques de trabajo independientes, resumidos en
+orden:
+
+**Balonazo Sangriento** (`/competiciones/[id]/balonazo`): revista de
+competición generada con IA. El usuario compartió 4 números reales de una
+revista casera que hizo con amigos hace años con ese mismo nombre — tras
+analizarla, se descartó la idea original de crónica IA por partido
+(estilo Jim & Bob) a favor de una revista por **jornada de liga o fase de
+torneo terminada** (no por partido individual), con 5 secciones: Ronda de
+noticias, El ojo del Contemplador (crónica del partido más intenso),
+El próximo objetivo (roast al jugador con más bajas causadas), Leyendas
+vivas (biografía de una Estrella), y Tablas y más tablas (100% datos
+reales, sin IA). Generación automática al completarse una jornada
+(`CompetitionFixture.round` completo), al cerrar la fase de grupos, o al
+completarse una ronda del cuadro de eliminatoria — enganchado directamente
+en `recordFixtureResult`/`closeGroupStage`/`recordBracketResult`. Usa
+**Gemini** (`gemini-2.5-flash` vía REST directa, `src/lib/gemini.ts`, sin
+SDK) — primera integración de IA generativa del proyecto; la variable
+`GEMINI_API_KEY` ya existía como hueco reservado sin usar desde antes. Solo
+visible para comisario e inscritos de esa competición. Modelo nuevo
+`MagazineIssue` — ver `DATA_MODEL.md`.
+
+**Biografías de Jugadores Estrella con IA**: además del texto generado por
+partido, se decidió enriquecer las 68 fichas de `MasterStarPlayer` con
+`lore` real. Un agente investigó las 68 en blood-bowl.fandom.com (wiki
+oficial de Blood Bowl — el usuario había enlazado por error
+`warhammerfantasy.fandom.com`, que no tiene contenido de Blood Bowl) y
+devolvió hechos sueltos (raza, equipo, hitos, citas) — nunca prosa
+copiada, para no reproducir contenido con copyright de Games Workshop. Un
+script (`enrich_star_lore.ts`, deliberadamente NO versionado, vive solo en
+el checkout local) usa esos hechos para generar con IA una biografía
+original en español por estrella y la guarda una sola vez. Bloqueado por
+la cuota gratuita de Gemini (20 peticiones/día) — el script ya salta las
+que ya tienen lore, así que cada relanzamiento diario avanza de verdad;
+16/68 hechas a fecha de hoy (tarjeta de seguimiento en Trello).
+
+**Fix real: Touchdown en la Arena no avanzaba turno**. El usuario reportó
+que marcar un touchdown solo subía el marcador. Se verificó contra las
+reglas reales antes de darle la razón sin más: confirmado que el turno del
+equipo que anota SIEMPRE termina y el equipo que encaja SIEMPRE patea la
+siguiente vez (reglas fijas, sin juicio del usuario de por medio, así que
+sí se pueden automatizar sin romper "consulta, no simulación") — pero el
+clima NO se vuelve a tirar tras un touchdown, solo si sale "Clima
+Cambiante" en la tabla de Patada Inicial (esa parte de la petición del
+usuario era incorrecta, se le explicó por qué). `logLiveMatchEvent` ahora
+avanza `turn` y cambia `kickingEntryId` en la misma transacción que el
+evento TOUCHDOWN, y el cliente abre el selector de Patada Inicial solo.
+
+**30/30 razas oficiales NAF + Slann**: el usuario compartió dos PDFs
+nuevos — el Reglamento NAF para Torneos 2026 (logística de torneos, no
+reglas de juego, salvo la ficha completa de Slann que sí trae) y *Spike!
+Journal Issue 21 — High Elves* (751 páginas "declaradas" pero en realidad
+36, PDF escaneado sin capa de texto generado con ImageMagick — se
+renderizaron a PNG con `pypdfium2`, poppler/pdftoppm sigue sin estar
+instalado en esta máquina). Confirmó que **Altos Elfos** era la única raza
+de las 30 oficiales de la NAF que faltaba en la base de datos. Ambas
+razas transcritas a `prisma/racesData.ts` (`pageRef: null` porque no vienen
+del reglamento base BB2025) — Slann es raza histórica opcional, no de las
+30 oficiales. De paso: "Hit and Run" (habilidad del Slann Blitzer) resultó
+ser el nombre de una edición anterior de "Golpe a la Carrera" (mismo texto
+de regla exacto, confirmado palabra por palabra por el usuario) — se
+resolvió como alias en vez de crear una habilidad duplicada.
+
+**Ficha de raza al fundar equipo**: el usuario reportó que elegir raza al
+fundar equipo se hacía "a ciegas". Se añadió a `MasterRace` un campo
+`playstyle` (frase de estilo de juego) y se reinterpretó el campo `tier`
+ya existente (sin usar hasta ahora) como "dificultad recomendada" 1-5 — se
+documentó explícitamente que **no es un tier competitivo oficial**, es
+guía propia para decidir la primera raza, para no confundirlo con un tier
+de metajuego real. Contenido para las 31 razas en `prisma/racePlaystyle.ts`
+(separado de `racesData.ts` a propósito: ese archivo es transcripción
+fiel del reglamento, esto es opinión del proyecto). Al elegir raza en
+`/equipos/nuevo` ahora se ve dificultad + frase de un vistazo, y al
+pinchar se abre la ficha completa (roster con stats/habilidades). Mismo
+contenido visible en `/nufflepedia/razas`, editable en `/admin/races`.
+
+**Dashboard reestructurado**: tira de accesos rápidos con contadores
+arriba, layout en dos columnas (contenido + barra lateral con buscador y
+Heraldo de Nuffle), nuevo bloque de últimos números de Balonazo Sangriento.
+El Heraldo de Nuffle pasó de auto-rotar cada 30s sin control a botones
+anterior/siguiente/al azar/pausa, y la biografía larga se colapsa con
+"Leer más/menos" para no desbordar la tarjeta.
+
+**Torneos Presenciales v1** (`/torneos-presenciales`, sección nueva y
+separada de Competiciones — renombrada "Competiciones Amateur" para
+distinguirlas): gestor para un evento de un día con muchas mesas a la vez,
+a diferencia del modelo de liga/temporada larga de `Competition`. Decisiones
+de diseño acordadas con el usuario antes de construir: sección
+completamente aparte (no una tercera opción dentro de `Competition`),
+organizador centraliza los resultados (no cada mesa reporta el suyo), y sí
+hace falta pantalla pública para proyectar. Inscritos con solo nombre +
+equipo + raza (sin cuenta ni `ManagedTeam`, para que valga con gente que
+solo viene al torneo). **Emparejamiento suizo** (`src/lib/swissPairing.ts`,
+con tests) evita repetir rival cuando hay alternativa y da bye (con puntos
+de victoria) a quien no haya descansado ya, priorizando al de más abajo en
+la tabla — inspirado en el Reglamento NAF para Torneos 2026 (5.3.1) pero
+**no es un gestor certificado por la NAF**, de ahí que el nombre de la
+sección evite decir "NAF". La clasificación se calcula siempre en vivo
+agregando el historial de partidos (`src/lib/presentialStandings.ts`, con
+tests) — deliberadamente sin puntos/TD/bajas guardados en el propio
+inscrito, para que nunca se pueda desincronizar de los resultados reales.
+Pantalla pública sin login (`/torneo-en-directo/[slug]`) con
+auto-refresco cada 15s, pensada para proyector. Bug real de integridad
+referencial encontrado y arreglado antes de subir a producción:
+`PresentialMatch.entrantAId`/`entrantBId` no tenían cascada hacia
+`PresentialEntrant`, así que borrar un torneo con partidos ya jugados
+fallaba por violación de clave foránea — se detectó con una simulación
+completa de 3 rondas antes de dar el trabajo por terminado.
+
+**Menú lateral editable** (`/admin/menu`): las 10 entradas del menú, antes
+fijas en `Sidebar.tsx`, viven ahora en `MasterNavItem` — solo el nombre es
+editable desde el admin (enlace y orden fijos a propósito, para no poder
+romper la navegación con un despiste).
 
 ## Cuestiones abiertas
 
