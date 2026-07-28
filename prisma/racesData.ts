@@ -29,7 +29,8 @@ export interface SeedPosition {
 export interface SeedRace {
   key: string;
   name: string;
-  pageRef: number;
+  /** Página del reglamento BB2025 (160-188). Null si la raza viene de otra fuente (p.ej. un Spike! Journal). */
+  pageRef: number | null;
   leagues: string[];
   specialRules: string[];
   rerollCost: number;
@@ -162,6 +163,24 @@ export const RACES: SeedRace[] = [
       { name: "Asesino Elfo Oscuro", tags: ["Elfo", "Especial"], max: 2, cost: 90000, ma: 7, st: 3, ag: 2, pa: 4, av: 8, skills: ["Apuñalar", "Atacar y huir", "Perseguir"], primary: ["A", "T"], secondary: ["F", "G"] },
       { name: "Blitzer Elfo Oscuro", tags: ["Elfo", "Blitzer"], max: 2, cost: 105000, ma: 7, st: 3, ag: 2, pa: 3, av: 9, skills: ["Placar"], primary: ["A", "G"], secondary: ["F", "P", "T"] },
       { name: "Elfa Bruja", tags: ["Elfo", "Especial"], max: 2, cost: 110000, ma: 7, st: 3, ag: 2, pa: 4, av: 8, skills: ["En pie de un salto", "Esquivar", "Furia"], primary: ["A", "G"], secondary: ["F", "T"] },
+    ],
+  },
+  {
+    // Transcrita de Spike! Journal Issue 21 - High Elves (Games Workshop, 2026),
+    // no del reglamento base BB2025 — de ahí pageRef: null.
+    key: "altos-elfos",
+    name: "Altos Elfos",
+    pageRef: null,
+    leagues: ["Liga de los Reinos Élficos"],
+    specialRules: [],
+    rerollCost: 50000,
+    rerollMax: 8,
+    allowsApothecary: true,
+    positions: [
+      { name: "Línea de Alto Elfo", tags: ["Elfo", "Línea"], max: 16, cost: 65000, ma: 6, st: 3, ag: 2, pa: 3, av: 9, skills: [], primary: ["A", "G"], secondary: ["F"] },
+      { name: "León Blanco", tags: ["Elfo", "Blitzer"], max: 2, cost: 110000, ma: 7, st: 3, ag: 2, pa: 3, av: 9, skills: ["Garras", "Forcejear"], primary: ["A", "G"], secondary: ["P", "F"] },
+      { name: "Guerrero Fénix", tags: ["Elfo", "Lanzador"], max: 2, cost: 90000, ma: 6, st: 3, ag: 2, pa: 2, av: 9, skills: ["Partenubes", "Pasar", "Pase seguro"], primary: ["A", "G", "P"], secondary: ["F"] },
+      { name: "Príncipe Dragón", tags: ["Elfo", "Blitzer", "Corredor"], max: 2, cost: 110000, ma: 8, st: 3, ag: 2, pa: 4, av: 9, skills: ["Placar", "El balón es mío", "Equilibrio firme"], primary: ["A", "G"], secondary: ["F"] },
     ],
   },
   {
@@ -314,6 +333,27 @@ export const RACES: SeedRace[] = [
       { name: "Eslizón Línea", tags: ["Hombre lagarto", "Línea"], max: 16, cost: 60000, ma: 8, st: 2, ag: 3, pa: 4, av: 8, skills: ["Escurridizo", "Esquivar"], primary: ["A"], secondary: ["F", "G", "P", "T"] },
       { name: "Eslizón Camaleón", tags: ["Hombre lagarto", "Lanzador"], max: 2, cost: 70000, ma: 8, st: 3, ag: 3, pa: 3, av: 8, skills: ["Atento al balón", "Escurridizo", "Esquivar", "Perseguir"], primary: ["A", "P"], secondary: ["F", "G", "T"] },
       { name: "Saurio defensor", tags: ["Hombre lagarto", "Defensor"], max: 6, cost: 90000, ma: 6, st: 4, ag: 5, pa: 6, av: 10, skills: ["Imparable", "Tembloroso"], primary: ["F", "G"], secondary: ["A"] },
+      { name: "Kroxigor", tags: ["Hombre lagarto", "Grandullón"], max: 1, cost: 140000, ma: 6, st: 5, ag: 5, pa: 6, av: 10, skills: ["Cabeza dura", "Cola prensil", "Estúpido", "Golpe mortífero", "Solitario (4+)"], primary: ["F"], secondary: ["A", "G"] },
+    ],
+  },
+  {
+    // Raza histórica opcional (no de los 30 equipos oficiales NAF) — ficha
+    // transcrita del Reglamento NAF para Torneos 2026, no del reglamento
+    // base BB2025, de ahí pageRef: null.
+    key: "slann",
+    name: "Slann",
+    pageRef: null,
+    leagues: ["Superliga Lustriana"],
+    specialRules: [],
+    rerollCost: 50000,
+    rerollMax: 8,
+    allowsApothecary: true,
+    positions: [
+      { name: "Slann Línea", tags: ["Hombre lagarto", "Línea"], max: 16, cost: 60000, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: ["Pogo saltarín"], primary: ["G"], secondary: ["A", "F"] },
+      { name: "Slann Receptor", tags: ["Hombre lagarto", "Receptor"], max: 2, cost: 80000, ma: 7, st: 2, ag: 2, pa: 3, av: 8, skills: ["Recepción heroica", "Atento al balón", "Pogo saltarín", "Piernas muy largas"], primary: ["A", "G"], secondary: ["P", "F"] },
+      // "Hit and Run" (distinto de "Golpe a la Carrera"/Strike and Run) no está en el catálogo
+      // todavía — pendiente de confirmar su texto oficial antes de añadirlo, ver conversación.
+      { name: "Slann Blitzer", tags: ["Hombre lagarto", "Blitzer"], max: 2, cost: 100000, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ["Placaje heroico", "Hit and Run", "En pie de un salto", "Pogo saltarín"], primary: ["A", "G", "F"], secondary: ["P"] },
       { name: "Kroxigor", tags: ["Hombre lagarto", "Grandullón"], max: 1, cost: 140000, ma: 6, st: 5, ag: 5, pa: 6, av: 10, skills: ["Cabeza dura", "Cola prensil", "Estúpido", "Golpe mortífero", "Solitario (4+)"], primary: ["F"], secondary: ["A", "G"] },
     ],
   },
