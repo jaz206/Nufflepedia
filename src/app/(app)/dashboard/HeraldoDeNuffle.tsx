@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildSkillInfoIndex } from "@/lib/resolveSkillName";
 import SkillPillList, { type SkillInfo } from "@/components/SkillPillList";
 
@@ -20,11 +20,15 @@ interface Star {
   lore: string | null;
 }
 
+const ROTATE_MS = 30_000;
+const LORE_PREVIEW_CHARS = 220;
+
 /**
- * Gaceta de Jugadores Estrella: navegación manual (anterior/siguiente/
- * aleatoria) entre las 68 fichas, con su biografía cuando ya se ha
- * generado. Solo depende de MasterStarPlayer — no de equipos ni de
- * partidos, así que puede vivir en el Dashboard desde ya.
+ * Gaceta de Jugadores Estrella: rota sola cada 30s, pero cualquier
+ * interacción manual (anterior/siguiente/al azar/expandir biografía) la
+ * pausa — hay que darle otra vez a "reanudar" para que vuelva a avanzar
+ * sola. Solo depende de MasterStarPlayer — no de equipos ni de partidos,
+ * así que puede vivir en el Dashboard desde ya.
  */
 export default function HeraldoDeNuffle({
   stars,
@@ -36,31 +40,64 @@ export default function HeraldoDeNuffle({
   traits: SkillInfo[];
 }) {
   const [index, setIndex] = useState(0);
+  const [auto, setAuto] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const skillIndex = useMemo(() => buildSkillInfoIndex([...skills, ...traits]), [skills, traits]);
+
+  useEffect(() => {
+    if (!auto || stars.length <= 1) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % stars.length);
+      setExpanded(false);
+    }, ROTATE_MS);
+    return () => clearInterval(timer);
+  }, [auto, stars.length]);
 
   if (stars.length === 0) return null;
   const star = stars[index];
 
   function go(delta: number) {
+    setAuto(false);
+    setExpanded(false);
     setIndex((i) => (i + delta + stars.length) % stars.length);
   }
   function random() {
     if (stars.length <= 1) return;
+    setAuto(false);
+    setExpanded(false);
     setIndex((i) => {
       let next = Math.floor(Math.random() * stars.length);
       if (next === i) next = (next + 1) % stars.length;
       return next;
     });
   }
+  function toggleExpanded() {
+    setAuto(false);
+    setExpanded((e) => !e);
+  }
+
+  const loreIsLong = !!star.lore && star.lore.length > LORE_PREVIEW_CHARS;
+  const lorePreview = star.lore && loreIsLong ? `${star.lore.slice(0, LORE_PREVIEW_CHARS).trimEnd()}…` : star.lore;
 
   return (
     <section>
-      <div className="mb-3 flex items-baseline justify-between">
+      <div className="mb-3 flex items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">El Heraldo de Nuffle</h2>
         {stars.length > 1 && (
-          <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
-            Estrella {index + 1} de {stars.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAuto((a) => !a)}
+              className="text-xs hover:underline"
+              style={{ color: "var(--ink-3)" }}
+              title={auto ? "Pausar rotación automática" : "Reanudar rotación automática"}
+            >
+              {auto ? "⏸ Auto" : "▶ Pausado"}
+            </button>
+            <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
+              Estrella {index + 1} de {stars.length}
+            </span>
+          </div>
         )}
       </div>
 
@@ -130,9 +167,21 @@ export default function HeraldoDeNuffle({
             )}
 
             {star.lore ? (
-              <p className="mt-3 border-t pt-3 text-sm leading-relaxed" style={{ borderColor: "var(--border)", color: "var(--ink-2)" }}>
-                {star.lore}
-              </p>
+              <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--ink-2)" }}>
+                  {expanded ? star.lore : lorePreview}
+                </p>
+                {loreIsLong && (
+                  <button
+                    type="button"
+                    onClick={toggleExpanded}
+                    className="mt-1 text-xs font-medium hover:underline"
+                    style={{ color: "var(--gold)" }}
+                  >
+                    {expanded ? "Leer menos ▲" : "Leer más ▼"}
+                  </button>
+                )}
+              </div>
             ) : (
               <p className="mt-3 border-t pt-3 text-xs italic" style={{ borderColor: "var(--border)", color: "var(--ink-3)" }}>
                 Todavía no tiene biografía — está pendiente de generarse.
