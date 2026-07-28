@@ -208,6 +208,7 @@ function RaceCard({ race }: { race: Race }) {
         name: next.name,
         pageRef: next.pageRef,
         tier: next.tier,
+        playstyle: next.playstyle,
         leagues: next.leagues,
         specialRules: next.specialRules,
         rerollCost: next.rerollCost,
@@ -293,7 +294,7 @@ function RaceCard({ race }: { race: Race }) {
                 />
               </label>
               <label className="flex flex-col text-[10px] uppercase tracking-wide text-zinc-400">
-                Tier
+                Dificultad (1 fácil–5 difícil)
                 <input
                   type="text"
                   inputMode="numeric"
@@ -315,6 +316,18 @@ function RaceCard({ race }: { race: Race }) {
                 Apotecario
               </label>
             </div>
+            <label className="flex flex-col text-[10px] uppercase tracking-wide text-zinc-400 sm:col-span-2">
+              Estilo de juego (se muestra al elegir raza para fundar equipo)
+              <textarea
+                className="input mt-0.5 py-1.5 text-sm"
+                rows={2}
+                defaultValue={r.playstyle ?? ""}
+                onBlur={(e) => {
+                  const v = e.target.value.trim() || null;
+                  if (v !== r.playstyle) saveRace({ playstyle: v });
+                }}
+              />
+            </label>
           </div>
 
           {err && <p className="text-xs text-[var(--danger)]">{err}</p>}

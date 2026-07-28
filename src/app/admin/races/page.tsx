@@ -15,6 +15,7 @@ export default async function AdminRacesPage() {
         name: r.name,
         pageRef: r.pageRef,
         tier: r.tier,
+        playstyle: r.playstyle,
         leagues: r.leagues,
         specialRules: r.specialRules,
         rerollCost: r.rerollCost,

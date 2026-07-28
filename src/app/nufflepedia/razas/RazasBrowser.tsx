@@ -29,6 +29,7 @@ interface Race {
   rerollMax: number;
   allowsApothecary: boolean;
   tier: number | null;
+  playstyle: string | null;
   positions: Position[];
 }
 
@@ -64,6 +65,7 @@ function RaceCard({ race }: { race: Race }) {
           {race.leagues.length > 0 && <span>Ligas: {race.leagues.join(", ")}</span>}
           {race.specialRules.length > 0 && <span>Reglas: {race.specialRules.join(", ")}</span>}
         </div>
+        {race.playstyle && <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{race.playstyle}</p>}
       </header>
 
       <div className="overflow-x-auto">

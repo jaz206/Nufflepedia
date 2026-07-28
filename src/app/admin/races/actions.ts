@@ -15,7 +15,8 @@ function fmt(e: z.ZodError): string {
 const raceSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
   pageRef: z.number().int().nullable(),
-  tier: z.number().int().nullable(),
+  tier: z.number().int().min(1).max(5).nullable(),
+  playstyle: z.string().nullable(),
   leagues: z.array(z.string()),
   specialRules: z.array(z.string()),
   rerollCost: z.number().int().min(0),
@@ -48,6 +49,7 @@ export async function updateRace(id: string, input: RaceInput): Promise<ActionRe
   await prisma.masterRace.update({ where: { id }, data: parsed.data });
   revalidatePath("/admin/races");
   revalidatePath("/nufflepedia/razas");
+  revalidatePath("/equipos/nuevo");
   return { ok: true };
 }
 
@@ -58,5 +60,6 @@ export async function updatePosition(id: string, input: PositionInput): Promise<
   await prisma.masterPosition.update({ where: { id }, data: parsed.data });
   revalidatePath("/admin/races");
   revalidatePath("/nufflepedia/razas");
+  revalidatePath("/equipos/nuevo");
   return { ok: true };
 }

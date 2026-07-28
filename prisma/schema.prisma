@@ -731,7 +731,13 @@ model MasterRace {
   key              String   @unique
   name             String
   pageRef          Int?
+  /// Dificultad recomendada para elegirla, 1 (fácil) a 5 (difícil) — no es
+  /// un tier competitivo oficial, es una guía propia para quien funda su
+  /// primer equipo. Ver /admin/races.
   tier             Int?
+  /// Resumen de 1-2 frases del estilo de juego, para decidir raza al
+  /// fundar equipo sin tener que leer el roster entero.
+  playstyle        String?
   /// Reglas especiales de equipo (ej. "Capitán del Equipo", "Brutos Brutales").
   specialRules     String[]
   /// Ligas a las que pertenece (determina qué estrellas puede fichar).

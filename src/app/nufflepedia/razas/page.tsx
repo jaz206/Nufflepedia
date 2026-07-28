@@ -26,6 +26,7 @@ export default async function RazasPage() {
           rerollMax: r.rerollMax,
           allowsApothecary: r.allowsApothecary,
           tier: r.tier,
+          playstyle: r.playstyle,
           positions: r.positions.map((p) => ({
             id: p.id,
             name: p.name,

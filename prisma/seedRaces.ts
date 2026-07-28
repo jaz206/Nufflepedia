@@ -8,6 +8,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { RACES } from "./racesData";
+import { RACE_PLAYSTYLE } from "./racePlaystyle";
 import { TRAITS } from "../src/rules-engine/data/traits";
 
 const prisma = new PrismaClient();
@@ -68,15 +69,18 @@ async function main() {
   let posCount = 0;
 
   for (const [i, race] of RACES.entries()) {
+    const guide = RACE_PLAYSTYLE[race.key];
     const dbRace = await prisma.masterRace.upsert({
       where: { key: race.key },
       update: {
         name: race.name, pageRef: race.pageRef, leagues: race.leagues, specialRules: race.specialRules,
         rerollCost: race.rerollCost, rerollMax: race.rerollMax, allowsApothecary: race.allowsApothecary, sortOrder: i,
+        tier: guide?.difficulty ?? null, playstyle: guide?.playstyle ?? null,
       },
       create: {
         key: race.key, name: race.name, pageRef: race.pageRef, leagues: race.leagues, specialRules: race.specialRules,
         rerollCost: race.rerollCost, rerollMax: race.rerollMax, allowsApothecary: race.allowsApothecary, sortOrder: i,
+        tier: guide?.difficulty ?? null, playstyle: guide?.playstyle ?? null,
       },
     });
 

@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: "/nufflepedia/tablas", label: "Tablas" },
   { href: "/nufflepedia/partido", label: "Secuencia de Partido" },
   { href: "/equipos", label: "Equipos" },
-  { href: "/competiciones", label: "Competiciones" },
+  { href: "/competiciones", label: "Competiciones Amateur" },
   { href: "/torneos-presenciales", label: "Torneos Presenciales" },
   { href: "/pizarra", label: "Pizarra" },
   { href: "/arena", label: "Arena" },
