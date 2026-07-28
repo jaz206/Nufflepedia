@@ -351,8 +351,9 @@ export const RACES: SeedRace[] = [
     positions: [
       { name: "Slann Línea", tags: ["Hombre lagarto", "Línea"], max: 16, cost: 60000, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: ["Pogo saltarín"], primary: ["G"], secondary: ["A", "F"] },
       { name: "Slann Receptor", tags: ["Hombre lagarto", "Receptor"], max: 2, cost: 80000, ma: 7, st: 2, ag: 2, pa: 3, av: 8, skills: ["Recepción heroica", "Atento al balón", "Pogo saltarín", "Piernas muy largas"], primary: ["A", "G"], secondary: ["P", "F"] },
-      // "Hit and Run" (distinto de "Golpe a la Carrera"/Strike and Run) no está en el catálogo
-      // todavía — pendiente de confirmar su texto oficial antes de añadirlo, ver conversación.
+      // "Hit and Run" es el nombre de edición anterior de "Golpe a la Carrera" (misma regla
+      // exacta) — resuelve por alias, ver ALIASES en seedRaces.ts y SKILL_NAME_ALIASES en
+      // src/lib/resolveSkillName.ts.
       { name: "Slann Blitzer", tags: ["Hombre lagarto", "Blitzer"], max: 2, cost: 100000, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ["Placaje heroico", "Hit and Run", "En pie de un salto", "Pogo saltarín"], primary: ["A", "G", "F"], secondary: ["P"] },
       { name: "Kroxigor", tags: ["Hombre lagarto", "Grandullón"], max: 1, cost: 140000, ma: 6, st: 5, ag: 5, pa: 6, av: 10, skills: ["Cabeza dura", "Cola prensil", "Estúpido", "Golpe mortífero", "Solitario (4+)"], primary: ["F"], secondary: ["A", "G"] },
     ],

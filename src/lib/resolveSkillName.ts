@@ -21,6 +21,7 @@ export function normalizeSkillName(s: string): string {
 
 const SKILL_NAME_ALIASES: Record<string, string> = {
   "atacar y huir": "golpe a la carrera",
+  "hit and run": "golpe a la carrera",
 };
 
 export function buildSkillNameIndex(entries: { key: string; name: string }[]): Map<string, string> {

@@ -34,6 +34,7 @@ function normalize(s: string): string {
 
 const ALIASES: Record<string, string> = {
   "atacar y huir": "golpe a la carrera",
+  "hit and run": "golpe a la carrera",
 };
 
 async function main() {
