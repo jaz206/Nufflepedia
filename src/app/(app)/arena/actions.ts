@@ -219,7 +219,15 @@ export async function logLiveMatchEvent(liveMatchId: string, input: z.infer<type
     });
     if (parsed.type === "TOUCHDOWN" && parsed.entryId) {
       const field = parsed.entryId === liveMatch.homeEntryId ? "homeScore" : "awayScore";
-      await tx.liveMatch.update({ where: { id: liveMatchId }, data: { [field]: { increment: 1 } } });
+      // Un touchdown termina siempre la entrada de quien anota (sin
+      // excepción, a diferencia de un cambio de turno por pérdida de
+      // balón) y el equipo que encaja saca de patada la siguiente vez —
+      // las dos cosas son reglas fijas, no requieren juicio del usuario.
+      const concedingEntryId = parsed.entryId === liveMatch.homeEntryId ? liveMatch.awayEntryId : liveMatch.homeEntryId;
+      await tx.liveMatch.update({
+        where: { id: liveMatchId },
+        data: { [field]: { increment: 1 }, turn: { increment: 1 }, kickingEntryId: concedingEntryId },
+      });
     }
   });
 

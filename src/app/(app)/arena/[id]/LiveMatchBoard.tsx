@@ -411,6 +411,10 @@ function InProgressStage({
       else {
         setSelected(null);
         setPendingInjury(null);
+        // El turno y el equipo pateador ya cambian solos en el servidor —
+        // solo falta la tirada de la tabla de Patada Inicial, que sí
+        // requiere al usuario, así que se abre directamente el selector.
+        if (input.type === "TOUCHDOWN") setShowKickoffPicker(true);
       }
     });
   }
@@ -497,7 +501,7 @@ function InProgressStage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <ControlButton onClick={nextTurn} disabled={pending} hint="Avanza el contador cuando el equipo activo pierde el balón o termina de jugar — no toca el marcador.">
+            <ControlButton onClick={nextTurn} disabled={pending} hint="Avanza el contador cuando el equipo activo pierde el balón o termina de jugar sin marcar — tras un touchdown el turno y el equipo pateador ya cambian solos.">
               Cambio de turno
             </ControlButton>
             {liveMatch.half === 1 && (
