@@ -36,12 +36,13 @@ model User {
   role        UserRole @default(USER)
   createdAt   DateTime @default(now())
 
-  managedTeams       ManagedTeam[]
-  commissionedComps  Competition[]      @relation("Commissioner")
-  competitionEntries CompetitionEntry[]
-  sentInvitations    Invitation[]       @relation("InvitedBy")
-  editedMatchReports MatchReport[]      @relation("MatchReportEditor")
-  liveMatches        LiveMatch[]
+  managedTeams          ManagedTeam[]
+  commissionedComps     Competition[]          @relation("Commissioner")
+  competitionEntries    CompetitionEntry[]
+  sentInvitations       Invitation[]           @relation("InvitedBy")
+  editedMatchReports    MatchReport[]          @relation("MatchReportEditor")
+  liveMatches           LiveMatch[]
+  presentialTournaments PresentialTournament[]
 }
 
 /// Estado de un jugador entre partidos (roster). Los estados transitorios de
@@ -859,4 +860,98 @@ model MasterMatchStep {
   updatedAt   DateTime           @updatedAt
 
   @@index([sectionId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Torneo Presencial: evento de un día/fin de semana con muchas mesas a la
+// vez — emparejamiento suizo, resultado centralizado por el organizador,
+// pantalla pública en directo (sin login, vía publicSlug). Deliberadamente
+// separado de Competition (Liguilla/Torneo): los inscritos son solo un
+// nombre + equipo + raza escritos a mano, sin necesidad de cuenta ni de
+// ManagedTeam — para que valga también con gente que solo viene al torneo.
+// Ver src/lib/swissPairing.ts para el algoritmo de emparejamiento.
+// ─────────────────────────────────────────────────────────────────────────
+
+enum PresentialTournamentStatus {
+  SETUP
+  IN_PROGRESS
+  FINISHED
+}
+
+model PresentialTournament {
+  id             String                     @id @default(uuid())
+  name           String
+  commissionerId String
+  commissioner   User                       @relation(fields: [commissionerId], references: [id])
+  status         PresentialTournamentStatus @default(SETUP)
+  totalRounds    Int
+  /// 0 = todavía no se ha emparejado ninguna ronda.
+  currentRound   Int                        @default(0)
+  pointsWin      Int                        @default(2)
+  pointsDraw     Int                        @default(1)
+  pointsLoss     Int                        @default(0)
+  /// Identificador de la URL pública de solo lectura (pantalla/proyector, sin login).
+  publicSlug     String                     @unique @default(uuid())
+  createdAt      DateTime                   @default(now())
+
+  entrants PresentialEntrant[]
+  rounds   PresentialRound[]
+
+  @@index([commissionerId])
+}
+
+/**
+ * Deliberadamente sin puntos/TD/bajas/nº de byes guardados aquí: se
+ * calculan siempre en vivo agregando PresentialMatch (ver
+ * src/lib/presentialStandings.ts) — con los pocos partidos de un torneo de
+ * un día no hay problema de rendimiento, y así es imposible que la
+ * clasificación se desincronice de los resultados reales si se corrige uno.
+ */
+model PresentialEntrant {
+  id           String               @id @default(uuid())
+  tournamentId String
+  tournament   PresentialTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  displayName  String
+  teamName     String
+  raceName     String
+  /// Se retira a media competición: no vuelve a emparejarse, pero conserva
+  /// su clasificación de las rondas ya jugadas.
+  dropped      Boolean              @default(false)
+  createdAt    DateTime             @default(now())
+
+  matchesAsA PresentialMatch[] @relation("MatchEntrantA")
+  matchesAsB PresentialMatch[] @relation("MatchEntrantB")
+
+  @@index([tournamentId])
+}
+
+model PresentialRound {
+  id           String               @id @default(uuid())
+  tournamentId String
+  tournament   PresentialTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  number       Int
+  createdAt    DateTime             @default(now())
+
+  matches PresentialMatch[]
+
+  @@unique([tournamentId, number])
+}
+
+model PresentialMatch {
+  id          String            @id @default(uuid())
+  roundId     String
+  round       PresentialRound   @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  tableNumber Int
+  entrantAId  String
+  entrantA    PresentialEntrant @relation("MatchEntrantA", fields: [entrantAId], references: [id], onDelete: Cascade)
+  /// Null = bye (entrantA descansa esa ronda, se le abonan los puntos de victoria).
+  entrantBId  String?
+  entrantB    PresentialEntrant? @relation("MatchEntrantB", fields: [entrantBId], references: [id], onDelete: Cascade)
+  scoreA      Int?
+  scoreB      Int?
+  casA        Int               @default(0)
+  casB        Int               @default(0)
+  reported    Boolean           @default(false)
+
+  @@index([roundId])
 }
