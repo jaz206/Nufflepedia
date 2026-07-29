@@ -11,12 +11,12 @@ export default async function NuevoEquipoPage() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-10">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-6 py-10">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">Fundar nueva franquicia</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-3)" }}>
-          Elige raza y bautiza tu equipo. Empiezas con 1.000.000 MO para reclutar. Pincha en una
-          raza para ver su ficha completa antes de decidir.
+          Empiezas con 1.000.000 MO para reclutar. Pasa razas con las flechas o la lista, mira
+          su ficha al momento y pon el nombre de tu equipo sin bajar la página.
         </p>
       </header>
       <NewTeamForm

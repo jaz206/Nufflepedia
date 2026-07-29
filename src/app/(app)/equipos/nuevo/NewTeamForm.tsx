@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createTeam } from "../actions";
 
 interface Position {
@@ -43,7 +43,7 @@ function gp(n: number) {
 function RaceDetail({ race }: { race: Race }) {
   const difficulty = difficultyLabel(race.tier);
   return (
-    <div className="rounded-[3px] border p-4" style={{ borderColor: "var(--gold-soft)", background: "var(--surface-1)" }}>
+    <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-lg font-bold">{race.name}</h3>
         <div className="flex items-center gap-3 text-xs" style={{ color: "var(--ink-3)" }}>
@@ -68,10 +68,13 @@ function RaceDetail({ race }: { race: Race }) {
         </p>
       )}
 
-      <div className="mt-3 overflow-x-auto">
+      <div className="mt-3 max-h-64 overflow-y-auto overflow-x-auto rounded-[3px] border" style={{ borderColor: "var(--border)" }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b text-[10px] uppercase tracking-wide" style={{ borderColor: "var(--border-strong)", color: "var(--ink-3)" }}>
+            <tr
+              className="sticky top-0 border-b text-[10px] uppercase tracking-wide"
+              style={{ borderColor: "var(--border-strong)", color: "var(--ink-3)", background: "var(--surface-1)" }}
+            >
               <th className="px-2 py-1 text-left">Cant.</th>
               <th className="px-2 py-1 text-left">Puesto</th>
               <th className="px-2 py-1 text-right">Coste</th>
@@ -109,12 +112,17 @@ function RaceDetail({ race }: { race: Race }) {
 }
 
 export default function NewTeamForm({ races }: { races: Race[] }) {
-  const [raceKey, setRaceKey] = useState<string | null>(null);
+  const [index, setIndex] = useState(0);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
 
-  const selectedRace = useMemo(() => races.find((r) => r.key === raceKey) ?? null, [races, raceKey]);
+  const selectedRace = races[index] ?? null;
+  const raceKey = selectedRace?.key ?? null;
+
+  function go(delta: number) {
+    setIndex((i) => (i + delta + races.length) % races.length);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -130,66 +138,91 @@ export default function NewTeamForm({ races }: { races: Race[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <p className="mb-3 text-sm font-medium">Raza</p>
-        <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-          {races.map((r) => {
-            const active = raceKey === r.key;
-            const difficulty = difficultyLabel(r.tier);
-            return (
-              <button
-                type="button"
-                key={r.key}
-                onClick={() => setRaceKey(active ? null : r.key)}
-                className="rounded-[3px] border p-3 text-left transition-colors"
-                style={{
-                  borderColor: active ? "var(--accent)" : "var(--border)",
-                  background: active
-                    ? "color-mix(in srgb, var(--accent) 10%, var(--surface-1))"
-                    : "var(--surface-1)",
-                }}
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="font-medium">{r.name}</p>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+        {/* Selector de raza: lista rápida con paso adelante/atrás tipo carrusel */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              className="rounded-[3px] border px-2 py-1 text-sm"
+              style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
+              aria-label="Raza anterior"
+            >
+              ‹
+            </button>
+            <p className="text-xs font-medium" style={{ color: "var(--ink-3)" }}>
+              {index + 1} / {races.length}
+            </p>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              className="rounded-[3px] border px-2 py-1 text-sm"
+              style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
+              aria-label="Siguiente raza"
+            >
+              ›
+            </button>
+          </div>
+          <div
+            className="max-h-80 overflow-y-auto rounded-[3px] border md:max-h-[28rem]"
+            style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
+          >
+            {races.map((r, i) => {
+              const active = i === index;
+              const difficulty = difficultyLabel(r.tier);
+              return (
+                <button
+                  type="button"
+                  key={r.key}
+                  onClick={() => setIndex(i)}
+                  className="flex w-full items-center justify-between gap-2 border-b px-3 py-2 text-left text-sm transition-colors last:border-b-0"
+                  style={{
+                    borderColor: "var(--border)",
+                    background: active ? "color-mix(in srgb, var(--accent) 12%, var(--surface-1))" : "transparent",
+                    fontWeight: active ? 600 : 400,
+                  }}
+                >
+                  <span>{r.name}</span>
                   {difficulty && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: difficulty.color }}>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: difficulty.color }}>
                       {difficulty.text}
                     </span>
                   )}
-                </div>
-                <p className="mt-0.5 text-xs" style={{ color: "var(--ink-3)" }}>
-                  {r.playstyle ? r.playstyle : `Reroll ${gp(r.rerollCost)}`}
-                </p>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Ficha de la raza elegida + nombre + confirmar, siempre visibles sin scroll */}
+        <div className="rounded-[3px] border p-4" style={{ borderColor: "var(--gold-soft)", background: "var(--surface-1)" }}>
+          {selectedRace && <RaceDetail race={selectedRace} />}
+
+          <div className="mt-4 flex flex-wrap items-end gap-3 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+            <div className="min-w-[220px] flex-1 space-y-2">
+              <label className="block text-sm font-medium" htmlFor="teamName">
+                Nombre del equipo
+              </label>
+              <input
+                id="teamName"
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="p. ej. Trituradores Verdes"
+                required
+                minLength={2}
+                maxLength={40}
+              />
+            </div>
+            <button type="submit" disabled={pending || !raceKey} className="btn-primary">
+              {pending ? "Fundando…" : "Fundar franquicia"}
+            </button>
+          </div>
+          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
       </div>
-
-      {selectedRace && <RaceDetail race={selectedRace} />}
-
-      <div className="max-w-sm space-y-2">
-        <label className="block text-sm font-medium" htmlFor="teamName">
-          Nombre del equipo
-        </label>
-        <input
-          id="teamName"
-          className="input"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="p. ej. Trituradores Verdes"
-          required
-          minLength={2}
-          maxLength={40}
-        />
-      </div>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <button type="submit" disabled={pending || !raceKey} className="btn-primary">
-        {pending ? "Fundando…" : "Fundar franquicia"}
-      </button>
     </form>
   );
 }
