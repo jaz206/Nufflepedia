@@ -85,6 +85,7 @@ model ManagedTeam {
 
   players            ManagedPlayer[]
   competitionEntries CompetitionEntry[]
+  tacticalPlays      TacticalPlay[]
 
   @@index([ownerId])
 }
@@ -116,7 +117,8 @@ model ManagedPlayer {
   avIncreases Int                @default(0)
   createdAt   DateTime           @default(now())
 
-  skills PlayerSkillAssignment[]
+  skills          PlayerSkillAssignment[]
+  tacticalTokens  TacticalToken[]
 
   @@index([teamId])
 }
@@ -972,4 +974,41 @@ model MasterNavItem {
   label     String
   sortOrder Int      @default(0)
   updatedAt DateTime @updatedAt
+}
+
+/**
+ * Pizarra táctica: jugadas guardadas para un equipo, en un tablero de
+ * GRID_COLS×GRID_ROWS (ver src/lib/tacticalFormations.ts). A diferencia
+ * del prototipo anterior, las fichas SIEMPRE guardan la referencia al
+ * jugador real (`TacticalToken.playerId`) — nunca se pierde al releer una
+ * jugada, precisamente para poder conectarla más adelante con la Arena.
+ */
+model TacticalPlay {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        ManagedTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tokens TacticalToken[]
+
+  @@index([teamId])
+}
+
+model TacticalToken {
+  id       String       @id @default(uuid())
+  playId   String
+  play     TacticalPlay @relation(fields: [playId], references: [id], onDelete: Cascade)
+  /// Null = ficha genérica de rival, sin jugador real asociado (ver `label`).
+  playerId String?
+  player   ManagedPlayer? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  side     String       // "mine" | "opponent"
+  x        Int
+  y        Int
+  /// Solo para fichas de rival sin jugador real, p.ej. "Blitzer rival".
+  label    String?
+
+  @@index([playId])
 }
