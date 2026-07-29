@@ -20,10 +20,23 @@ export default async function PizarraTeamPage({ params }: { params: Promise<{ te
   if (!team) notFound();
   if (team.ownerId !== dbUser.id) redirect("/pizarra");
 
+  const positionKeys = team.players.map((p) => p.positionKey).filter((k): k is string => !!k);
+  const positions = await prisma.masterPosition.findMany({
+    where: { id: { in: positionKeys } },
+    select: { id: true, name: true },
+  });
+  const positionNameById = new Map(positions.map((p) => [p.id, p.name]));
+
   return (
     <TacticalBoard
       team={{ id: team.id, name: team.name }}
-      roster={team.players.map((p) => ({ id: p.id, number: p.number, customName: p.customName }))}
+      roster={team.players.map((p) => ({
+        id: p.id,
+        number: p.number,
+        customName: p.customName,
+        positionLabel: p.positionKey ? (positionNameById.get(p.positionKey) ?? null) : null,
+        isStar: !!p.starKey,
+      }))}
       plays={team.tacticalPlays.map((play) => ({
         id: play.id,
         name: play.name,

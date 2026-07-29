@@ -18,6 +18,7 @@ import { buildSkillInfoIndex } from "@/lib/resolveSkillName";
 import { getPositionFlavorLabel } from "@/rules-engine/data/playerNames";
 import SkillPillList, { type SkillInfo } from "@/components/SkillPillList";
 import LevelUpPanel from "@/components/LevelUpPanel";
+import Modal from "@/components/Modal";
 import { LEVEL_UP_SPP_COST_TABLE } from "@/rules-engine/data/tables/levelUp";
 import { statLine, effectiveStats } from "@/lib/playerStats";
 
@@ -191,6 +192,8 @@ export default function TeamBuilder({
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>();
   const [expandedStar, setExpandedStar] = useState<string | null>(null);
+  const [starModalOpen, setStarModalOpen] = useState(false);
+  const [starQuery, setStarQuery] = useState("");
   const skillIndex = useMemo(() => buildSkillInfoIndex([...skills, ...traits]), [skills, traits]);
   const skillNameByKey = useMemo(
     () => new Map(skills.filter((s): s is SkillInfo & { key: string } => !!s.key).map((s) => [s.key, s.name])),
@@ -299,6 +302,12 @@ export default function TeamBuilder({
   const spent = BUDGET - optimistic.treasury;
   const countInPosition = (posId: string) => optimistic.players.filter((p) => p.positionKey === posId).length;
   const countForStar = (starKey: string) => optimistic.players.filter((p) => p.starKey === starKey).length;
+  const hiredStarsCount = optimistic.players.filter((p) => p.starKey).length;
+  const filteredStars = useMemo(() => {
+    const q = starQuery.trim().toLowerCase();
+    if (!q) return stars;
+    return stars.filter((s) => s.name.toLowerCase().includes(q));
+  }, [stars, starQuery]);
 
   function handleAdd(pos: Position) {
     setError(undefined);
@@ -494,13 +503,37 @@ export default function TeamBuilder({
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       {/*
-        Tres columnas independientes a propósito: si los catálogos y la
-        plantilla compartieran una sola columna, cada jugador fichado
-        alargaría la lista de arriba y desplazaría el botón "Añadir"/"Fichar"
-        justo cuando ibas a hacer el siguiente clic. En columnas separadas (o
-        apiladas en móvil con los catálogos primero) el botón nunca se mueve.
+        Las Estrellas casi nunca se fichan al fundar el equipo (rara vez hay
+        presupuesto para ellas nada más empezar), así que en vez de una
+        columna entera solo hay un botón que abre el mercado en un modal
+        con buscador — no compite por espacio con el roster ni la plantilla.
       */}
-      <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
+      <button
+        type="button"
+        onClick={() => setStarModalOpen(true)}
+        disabled={stars.length === 0}
+        className="flex w-full items-center justify-between gap-2 rounded-[3px] border px-3 py-2 text-left transition-colors disabled:opacity-50"
+        style={{ borderColor: "var(--gold-soft)", background: "var(--surface-1)" }}
+      >
+        <span>
+          <span className="text-sm font-medium">Mercado de Estrellas</span>{" "}
+          <span className="text-xs" style={{ color: "var(--ink-3)" }}>
+            {stars.length === 0
+              ? `Ninguna Estrella juega para las ligas de ${race.name}`
+              : `${stars.length} disponibles${hiredStarsCount > 0 ? ` · ${hiredStarsCount} en plantilla` : ""}`}
+          </span>
+        </span>
+        {stars.length > 0 && <span className="btn-secondary shrink-0" style={{ padding: "4px 12px", fontSize: "12px" }}>Ver estrellas</span>}
+      </button>
+
+      {/*
+        Dos columnas independientes a propósito: si el roster y la plantilla
+        compartieran una sola columna, cada jugador fichado alargaría la
+        lista de arriba y desplazaría el botón "Añadir" justo cuando ibas a
+        hacer el siguiente clic. En columnas separadas (o apiladas en móvil
+        con el roster primero) el botón nunca se mueve.
+      */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <section>
           <h2 className="mb-3 text-lg font-semibold">Roster de {race.name}</h2>
           <div className="grid gap-2">
@@ -541,71 +574,6 @@ export default function TeamBuilder({
               );
             })}
           </div>
-        </section>
-
-        <section>
-          <h2 className="mb-3 text-lg font-semibold">Mercado de Estrellas</h2>
-          {stars.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--ink-3)" }}>
-              Ninguna Estrella juega para las ligas de {race.name}.
-            </p>
-          ) : (
-            <div className="grid gap-1.5">
-              {stars.map((star) => {
-                const copies = countForStar(star.key);
-                const maxed = copies >= MAX_COPIES_PER_STAR;
-                const tooExpensive = star.cost > optimistic.treasury;
-                const disabled = maxed || tooExpensive;
-                const expanded = expandedStar === star.key;
-                return (
-                  <div
-                    key={star.key}
-                    className="rounded-[3px] border"
-                    style={{ borderColor: "var(--gold-soft)", background: "var(--surface-1)" }}
-                  >
-                    <div className="flex items-center gap-2 px-3 py-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedStar((cur) => (cur === star.key ? null : star.key))}
-                        className="min-w-0 flex-1 text-left"
-                        aria-expanded={expanded}
-                      >
-                        <span className="text-sm font-medium">{star.name}</span>{" "}
-                        <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
-                          {statLine(star)} · {star.cost.toLocaleString("es-ES")} MO · {copies}/{MAX_COPIES_PER_STAR}
-                        </span>{" "}
-                        <span className="text-xs" style={{ color: "var(--ink-3)" }}>
-                          {expanded ? "▲" : "▼"}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleHireStar(star)}
-                        disabled={disabled}
-                        className="btn-primary shrink-0"
-                        style={{ padding: "4px 12px", fontSize: "12px" }}
-                      >
-                        {maxed ? "Al máximo" : tooExpensive ? "Sin fondos" : "Fichar"}
-                      </button>
-                    </div>
-                    {expanded && (
-                      <div className="border-t px-3 py-2" style={{ borderColor: "var(--border)" }}>
-                        <SkillPillList names={star.skillKeys} index={skillIndex} />
-                        {star.specialRuleName && (
-                          <p className="mt-1 text-xs" style={{ color: "var(--gold)" }}>
-                            {star.specialRuleName}
-                            {star.specialRuleText && (
-                              <span style={{ color: "var(--ink-3)" }}> — {star.specialRuleText}</span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </section>
 
         <section>
@@ -724,6 +692,89 @@ export default function TeamBuilder({
           )}
         </section>
       </div>
+
+      <Modal
+        open={starModalOpen}
+        onClose={() => {
+          setStarModalOpen(false);
+          setStarQuery("");
+          setExpandedStar(null);
+        }}
+        title="Mercado de Estrellas"
+        maxWidthClassName="max-w-xl"
+      >
+        <div className="space-y-3">
+          <input
+            type="search"
+            className="input"
+            placeholder="Buscar Estrella, p. ej. «Akhorne»…"
+            value={starQuery}
+            onChange={(e) => setStarQuery(e.target.value)}
+            autoComplete="off"
+          />
+          {filteredStars.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--ink-3)" }}>
+              Sin resultados.
+            </p>
+          ) : (
+            <div className="grid max-h-[60vh] gap-1.5 overflow-y-auto pr-1">
+              {filteredStars.map((star) => {
+                const copies = countForStar(star.key);
+                const maxed = copies >= MAX_COPIES_PER_STAR;
+                const tooExpensive = star.cost > optimistic.treasury;
+                const disabled = maxed || tooExpensive;
+                const expanded = expandedStar === star.key;
+                return (
+                  <div
+                    key={star.key}
+                    className="rounded-[3px] border"
+                    style={{ borderColor: "var(--gold-soft)", background: "var(--surface-2)" }}
+                  >
+                    <div className="flex items-center gap-2 px-3 py-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedStar((cur) => (cur === star.key ? null : star.key))}
+                        className="min-w-0 flex-1 text-left"
+                        aria-expanded={expanded}
+                      >
+                        <span className="text-sm font-medium">{star.name}</span>{" "}
+                        <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
+                          {statLine(star)} · {star.cost.toLocaleString("es-ES")} MO · {copies}/{MAX_COPIES_PER_STAR}
+                        </span>{" "}
+                        <span className="text-xs" style={{ color: "var(--ink-3)" }}>
+                          {expanded ? "▲" : "▼"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleHireStar(star)}
+                        disabled={disabled}
+                        className="btn-primary shrink-0"
+                        style={{ padding: "4px 12px", fontSize: "12px" }}
+                      >
+                        {maxed ? "Al máximo" : tooExpensive ? "Sin fondos" : "Fichar"}
+                      </button>
+                    </div>
+                    {expanded && (
+                      <div className="border-t px-3 py-2" style={{ borderColor: "var(--border)" }}>
+                        <SkillPillList names={star.skillKeys} index={skillIndex} />
+                        {star.specialRuleName && (
+                          <p className="mt-1 text-xs" style={{ color: "var(--gold)" }}>
+                            {star.specialRuleName}
+                            {star.specialRuleText && (
+                              <span style={{ color: "var(--ink-3)" }}> — {star.specialRuleText}</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

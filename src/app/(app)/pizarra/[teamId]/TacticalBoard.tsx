@@ -6,10 +6,34 @@ import { savePlay, deletePlay } from "../actions";
 
 const CELL = 26;
 
+// Paleta fija (no un hash de HSL crudo) para que los colores sean siempre
+// distinguibles entre sí y legibles sobre el césped verde.
+const POSITION_PALETTE = [
+  "#2f6fb0",
+  "#d97e1f",
+  "#8a3fb0",
+  "#1f9e8a",
+  "#c23f7a",
+  "#8a5a2f",
+  "#46536b",
+  "#d1495b",
+  "#6fae2f",
+  "#3f7fd9",
+];
+
+/** Color estable por nombre de posición (mismo puesto = mismo color siempre). */
+function colorForPosition(label: string): string {
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) hash = (hash * 31 + label.charCodeAt(i)) >>> 0;
+  return POSITION_PALETTE[hash % POSITION_PALETTE.length];
+}
+
 interface RosterPlayer {
   id: string;
   number: number;
   customName: string;
+  positionLabel: string | null;
+  isStar: boolean;
 }
 interface Token {
   /** Clave de React local — no persiste, se recalcula al guardar. */
@@ -59,6 +83,13 @@ export default function TacticalBoard({
 
   const placedPlayerIds = useMemo(() => new Set(tokens.map((t) => t.playerId).filter((id): id is string => !!id)), [tokens]);
   const bench = useMemo(() => roster.filter((p) => !placedPlayerIds.has(p.id)), [roster, placedPlayerIds]);
+  const positionLegend = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of roster) {
+      if (p.positionLabel && !seen.has(p.positionLabel)) seen.set(p.positionLabel, colorForPosition(p.positionLabel));
+    }
+    return [...seen.entries()];
+  }, [roster]);
 
   function loadPlay(play: SavedPlay | null) {
     setError(undefined);
@@ -225,12 +256,18 @@ export default function TacticalBoard({
                   key={p.id}
                   type="button"
                   onClick={() => setSelectedBenchPlayerId((cur) => (cur === p.id ? null : p.id))}
-                  className="rounded-[3px] border px-2 py-1 text-left text-sm transition-colors"
+                  className="flex items-center gap-1.5 rounded-[3px] border px-2 py-1 text-left text-sm transition-colors"
                   style={{
                     borderColor: selectedBenchPlayerId === p.id ? "var(--accent)" : "var(--border)",
                     background: selectedBenchPlayerId === p.id ? "color-mix(in srgb, var(--accent) 12%, var(--surface-1))" : "var(--surface-1)",
                   }}
                 >
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{
+                      background: p.isStar ? "var(--gold)" : p.positionLabel ? colorForPosition(p.positionLabel) : "var(--ink-3)",
+                    }}
+                  />
                   #{p.number} {p.customName}
                 </button>
               ))}
@@ -241,6 +278,24 @@ export default function TacticalBoard({
               )}
             </div>
           </div>
+
+          {positionLegend.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium">Leyenda de posiciones</p>
+              <div className="flex flex-col gap-1">
+                {positionLegend.map(([label, color]) => (
+                  <div key={label} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--ink-2)" }}>
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
+                    {label}
+                  </div>
+                ))}
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--ink-2)" }}>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: "var(--gold)" }} />
+                  Jugador Estrella
+                </div>
+              </div>
+            </div>
+          )}
 
           {selectedToken && (
             <div className="rounded-[3px] border p-3 text-sm" style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}>
@@ -322,6 +377,11 @@ export default function TacticalBoard({
             {tokens.map((t) => {
               const player = t.playerId ? roster.find((p) => p.id === t.playerId) : null;
               const mine = t.side === "mine";
+              const fill = mine
+                ? player?.positionLabel
+                  ? colorForPosition(player.positionLabel)
+                  : "var(--accent)"
+                : "#241a14";
               return (
                 <button
                   key={t.key}
@@ -337,15 +397,19 @@ export default function TacticalBoard({
                     top: t.y * CELL,
                     width: CELL - 2,
                     height: CELL - 2,
-                    background: mine ? "var(--accent)" : "#241a14",
-                    color: mine ? "var(--accent-ink)" : "#f4ead8",
-                    border: "1.5px solid rgba(255,255,255,0.85)",
+                    background: fill,
+                    color: "#f4ead8",
+                    border: player?.isStar ? "2px solid var(--gold)" : "1.5px solid rgba(255,255,255,0.85)",
                     boxShadow: "1px 1px 0 rgba(0,0,0,0.35)",
                     outline: selectedKey === t.key ? "2px solid var(--gold)" : "none",
                     outlineOffset: 1,
                     touchAction: "none",
                   }}
-                  title={player ? `#${player.number} ${player.customName}` : (t.label ?? "Rival")}
+                  title={
+                    player
+                      ? `#${player.number} ${player.customName}${player.positionLabel ? ` — ${player.positionLabel}` : ""}`
+                      : (t.label ?? "Rival")
+                  }
                 >
                   {player ? player.number : "R"}
                 </button>

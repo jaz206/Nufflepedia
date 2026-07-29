@@ -8,11 +8,14 @@ export default function Modal({
   onClose,
   title,
   children,
+  maxWidthClassName = "max-w-md",
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  /** Ancho del panel — por defecto max-w-md; algunos contenidos (listas con más columnas de info) piden más sitio. */
+  maxWidthClassName?: string;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -39,7 +42,7 @@ export default function Modal({
         aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-[3px] border p-5"
+        className={`relative w-full ${maxWidthClassName} rounded-[3px] border p-5`}
         style={{
           borderColor: "var(--border-strong)",
           background: "var(--surface-1)",
