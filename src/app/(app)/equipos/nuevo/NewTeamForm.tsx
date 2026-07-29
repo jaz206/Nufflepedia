@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { createTeam } from "../actions";
+import { buildSkillInfoIndex } from "@/lib/resolveSkillName";
+import SkillPillList, { type SkillInfo } from "@/components/SkillPillList";
 
 interface Position {
   id: string;
@@ -40,7 +42,7 @@ function gp(n: number) {
   return `${(n / 1000).toLocaleString("es-ES")}k`;
 }
 
-function RaceDetail({ race }: { race: Race }) {
+function RaceDetail({ race, skillIndex }: { race: Race; skillIndex: Map<string, SkillInfo> }) {
   const difficulty = difficultyLabel(race.tier);
   return (
     <div>
@@ -100,7 +102,7 @@ function RaceDetail({ race }: { race: Race }) {
                 <td className="px-1 py-1 text-center font-mono">{p.pa ? `${p.pa}+` : "–"}</td>
                 <td className="px-1 py-1 text-center font-mono">{p.av}+</td>
                 <td className="px-2 py-1 text-xs" style={{ color: "var(--ink-2)" }}>
-                  {p.startingSkillKeys.length ? p.startingSkillKeys.join(", ") : "—"}
+                  {p.startingSkillKeys.length ? <SkillPillList names={p.startingSkillKeys} index={skillIndex} /> : "—"}
                 </td>
               </tr>
             ))}
@@ -111,12 +113,33 @@ function RaceDetail({ race }: { race: Race }) {
   );
 }
 
-export default function NewTeamForm({ races }: { races: Race[] }) {
+interface SkillEntry {
+  key: string;
+  name: string;
+  description: string;
+  isElite: boolean;
+  category: string;
+}
+interface TraitEntry {
+  name: string;
+  description: string;
+}
+
+export default function NewTeamForm({
+  races,
+  skills,
+  traits,
+}: {
+  races: Race[];
+  skills: SkillEntry[];
+  traits: TraitEntry[];
+}) {
   const [index, setIndex] = useState(0);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
 
+  const skillIndex = useMemo(() => buildSkillInfoIndex([...skills, ...traits]), [skills, traits]);
   const selectedRace = races[index] ?? null;
   const raceKey = selectedRace?.key ?? null;
 
@@ -198,7 +221,7 @@ export default function NewTeamForm({ races }: { races: Race[] }) {
 
         {/* Ficha de la raza elegida + nombre + confirmar, siempre visibles sin scroll */}
         <div className="rounded-[3px] border p-4" style={{ borderColor: "var(--gold-soft)", background: "var(--surface-1)" }}>
-          {selectedRace && <RaceDetail race={selectedRace} />}
+          {selectedRace && <RaceDetail race={selectedRace} skillIndex={skillIndex} />}
 
           <div className="mt-4 flex flex-wrap items-end gap-3 border-t pt-4" style={{ borderColor: "var(--border)" }}>
             <div className="min-w-[220px] flex-1 space-y-2">

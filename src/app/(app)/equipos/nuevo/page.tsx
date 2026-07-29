@@ -5,10 +5,14 @@ import NewTeamForm from "./NewTeamForm";
 export default async function NuevoEquipoPage() {
   await requireUser();
 
-  const races = await prisma.masterRace.findMany({
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    include: { positions: { orderBy: { sortOrder: "asc" } } },
-  });
+  const [races, skills, traits] = await Promise.all([
+    prisma.masterRace.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      include: { positions: { orderBy: { sortOrder: "asc" } } },
+    }),
+    prisma.masterSkill.findMany({ select: { key: true, name: true, description: true, isElite: true, category: true } }),
+    prisma.masterTrait.findMany({ select: { name: true, description: true } }),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-6 py-10">
@@ -20,6 +24,8 @@ export default async function NuevoEquipoPage() {
         </p>
       </header>
       <NewTeamForm
+        skills={skills}
+        traits={traits}
         races={races.map((r) => ({
           key: r.key,
           name: r.name,
