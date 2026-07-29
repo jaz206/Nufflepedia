@@ -45,10 +45,10 @@ export default async function TeamPage({
         >
           <span>
             <strong>{team.name}</strong> es un equipo invitado para un amistoso. Cuando termines de montar la
-            plantilla, vuelve a Arena para empezar el partido.
+            plantilla, vuelve al Asistente de Partido para empezar el partido.
           </span>
           <Link href="/arena/nuevo" className="btn-primary whitespace-nowrap">
-            Volver a Arena
+            Volver al Asistente de Partido
           </Link>
         </div>
       )}

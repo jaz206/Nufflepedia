@@ -146,7 +146,7 @@ export default async function CompetitionPage({ params }: { params: Promise<{ id
   );
 
   // Datos de "Mi plantilla de esta competición" para CADA equipo propio
-  // inscrito — mismos catálogos que usa El Cuartel, cacheados por raza para
+  // inscrito — mismos catálogos que usa Mis Equipos, cacheados por raza para
   // no repetir la consulta si varios equipos propios comparten raza.
   const rosterDataByRaceKey = new Map<string, Awaited<ReturnType<typeof loadMyRosterData>>>();
   const myRosters: {

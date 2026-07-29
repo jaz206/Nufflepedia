@@ -63,9 +63,9 @@ export default async function CompeticionesPage() {
     <div className="mx-auto w-full max-w-5xl space-y-10 px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Competiciones</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Torneos y Ligas Locales</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--ink-3)" }}>
-            La Arena — ligas y torneos.
+            Ligas y torneos con tu grupo habitual.
           </p>
         </div>
         <Link href="/competiciones/nueva" className="btn-primary">

@@ -114,7 +114,7 @@ export default function CompetitionRoster({
           <h3 className="text-sm font-semibold">Mi plantilla de esta competición — {teamName}</h3>
           <p className="text-xs" style={{ color: "var(--ink-3)" }}>
             Copia de trabajo aislada de tu equipo — lo que pase aquí (PE, subidas de nivel, fichajes) no afecta a tu plantilla real
-            en El Cuartel.
+            en Mis Equipos.
           </p>
         </div>
         <button type="button" onClick={() => setOpen(false)} className="text-xs underline" style={{ color: "var(--ink-3)" }}>

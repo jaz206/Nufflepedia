@@ -101,7 +101,7 @@ export default function NewFriendlyForm({
       <p className="text-sm" style={{ color: "var(--ink-3)" }}>
         Necesitas fundar al menos un equipo en{" "}
         <Link href="/equipos/nuevo" className="underline">
-          El Cuartel
+          Mis Equipos
         </Link>{" "}
         antes de poder jugar un amistoso.
       </p>

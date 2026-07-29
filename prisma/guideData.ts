@@ -2,7 +2,10 @@
  * Contenido semilla de /guia (qué es y para qué sirve cada apartado del
  * menú lateral) — no es contenido de reglas oficiales, así que vive aquí
  * y no en src/rules-engine/, pero sigue el mismo patrón: semilla versionada
- * → tabla Master* editable desde /admin.
+ * → tabla Master* editable desde /admin. Los títulos deben coincidir
+ * EXACTAMENTE con las etiquetas reales del menú (editables en
+ * /admin/menu) — si se renombra una entrada del menú, actualizar aquí
+ * también para no reabrir la confusión de nombres ya vivida antes.
  */
 
 export interface GuideSectionSeed {
@@ -19,17 +22,17 @@ export const GUIDE_SECTIONS: GuideSectionSeed[] = [
   {
     key: "biblioteca",
     emoji: "📖",
-    title: "La Biblioteca (Nufflepedia)",
+    title: "Biblioteca de Reglas",
     href: "/nufflepedia",
     color: "#8a5cf6",
     description:
-      "Consulta rápida de reglas: 72 habilidades, 40 rasgos, las 29 razas oficiales y los 68 Jugadores Estrella. Es pública — puedes compartir el enlace con quien no tenga cuenta.",
+      "Consulta rápida de reglas: 72 habilidades, 40 rasgos, las 31 razas oficiales y los 68 Jugadores Estrella. Es pública — puedes compartir el enlace con quien no tenga cuenta.",
     sortOrder: 0,
   },
   {
     key: "tablas",
     emoji: "🎲",
-    title: "Tablas",
+    title: "Tablas de Tiradas",
     href: "/nufflepedia/tablas",
     color: "#2f9e44",
     description:
@@ -47,43 +50,54 @@ export const GUIDE_SECTIONS: GuideSectionSeed[] = [
     sortOrder: 2,
   },
   {
-    key: "cuartel",
+    key: "equipos",
     emoji: "🏰",
-    title: "El Cuartel (Equipos)",
+    title: "Mis Equipos",
     href: "/equipos",
     color: "#e8590c",
     description:
-      "Aquí fundas y gestionas tus equipos: eliges raza, fichas jugadores, compras personal de banquillo (relanzamientos, animadoras, apotecario...) y subes de nivel gastando PE.",
+      "Aquí fundas y gestionas tus equipos: eliges raza (con ficha completa y guía de dificultad para decidir), fichas jugadores, compras personal de banquillo (relanzamientos, animadoras, apotecario...) y subes de nivel gastando PE.",
     sortOrder: 3,
   },
   {
     key: "competiciones",
     emoji: "🏟️",
-    title: "Competiciones",
+    title: "Torneos y Ligas Locales",
     href: "/competiciones",
     color: "#c92a2a",
     description:
-      "Crea o únete a ligas y torneos. Las ligas generan calendario automático a doble vuelta; los torneos, cuadro de eliminatoria (con fase de grupos opcional). Cada equipo juega con una copia de su plantilla aislada solo para esa competición.",
+      "Crea o únete a ligas y torneos con tu grupo habitual. Las ligas generan calendario automático a doble vuelta; los torneos, cuadro de eliminatoria (con fase de grupos opcional). Cada equipo juega con una copia de su plantilla aislada solo para esa competición, y cada jornada/fase terminada genera un número de Balonazo Sangriento, la revista de la competición.",
     sortOrder: 4,
   },
   {
-    key: "arena",
-    emoji: "⚔️",
-    title: "Arena — Asistente de Partido en vivo",
-    href: "/arena",
-    color: "#ae3ec9",
+    key: "torneos_naf",
+    emoji: "🏆",
+    title: "Torneos NAF",
+    href: "/torneos-presenciales",
+    color: "#0c8599",
     description:
-      "Para amistosos sueltos: elige tu equipo y el rival (otro tuyo, el de un amigo con cuenta, o uno creado al vuelo) y lleva el partido en directo — marcador, turnos, Touchdowns, bajas y más, cada botón con una explicación para ir aprendiendo el reglamento.",
+      "Para un evento de un día con muchas mesas a la vez: inscripción sin necesidad de cuenta, emparejamiento suizo automático (evita repetir rival, reparte los descansos), resultados centralizados por el organizador, y una pantalla pública sin login para proyectar los emparejamientos y la clasificación.",
     sortOrder: 5,
   },
   {
     key: "pizarra",
     emoji: "🗺️",
-    title: "Pizarra",
+    title: "Pizarra Táctica",
     href: "/pizarra",
     color: "#495057",
-    description: "Mesa táctica para dibujar y guardar jugadas. Todavía en construcción.",
+    description:
+      "Elige un equipo y dibuja formaciones con tus jugadores reales sobre un tablero de 26×15, con imán a la cuadrícula. Guarda jugadas con nombre para consultarlas luego — la ficha nunca pierde la referencia al jugador real.",
     sortOrder: 6,
+  },
+  {
+    key: "arena",
+    emoji: "⚔️",
+    title: "Asistente de Partido",
+    href: "/arena",
+    color: "#ae3ec9",
+    description:
+      "Para amistosos sueltos: elige tu equipo y el rival (otro tuyo, el de un amigo con cuenta, o uno creado al vuelo) y lleva el partido en directo — marcador, turnos, Touchdowns, bajas y más, cada botón con una explicación para ir aprendiendo el reglamento.",
+    sortOrder: 7,
   },
 ];
 
@@ -99,7 +113,7 @@ export const GUIDE_FAQ: GuideFaqSeed[] = [
     key: "amistoso_sin_liga",
     question: "¿Necesito crear una liga para jugar un partido suelto?",
     answer:
-      "No — para eso está la Arena (Asistente de Partido en vivo, /arena). Sirve para amistosos sin tener que montar una liga o torneo entero.",
+      "No — para eso está el Asistente de Partido (/arena). Sirve para amistosos sin tener que montar una liga o torneo entero.",
     sortOrder: 0,
   },
   {
@@ -113,7 +127,7 @@ export const GUIDE_FAQ: GuideFaqSeed[] = [
     key: "amistoso_afecta_equipo",
     question: "¿Los resultados de un amistoso afectan a mi equipo real?",
     answer:
-      "Sí — a diferencia de una competición (que usa una copia aislada de la plantilla), un amistoso terminado aplica los PE, lesiones y demás cambios directamente a tu equipo de El Cuartel.",
+      "Sí — a diferencia de una competición (que usa una copia aislada de la plantilla), un amistoso terminado aplica los PE, lesiones y demás cambios directamente a tu equipo de Mis Equipos.",
     sortOrder: 2,
   },
   {
@@ -135,5 +149,12 @@ export const GUIDE_FAQ: GuideFaqSeed[] = [
     question: "¿Sirve para jugar sin tablero ni miniaturas?",
     answer: "Hoy no — está pensada como ayudante mientras juegas en mesa con miniaturas, no como sustituto del tablero.",
     sortOrder: 5,
+  },
+  {
+    key: "torneos_naf_vs_locales",
+    question: "¿En qué se diferencian «Torneos y Ligas Locales» de «Torneos NAF»?",
+    answer:
+      "Torneos y Ligas Locales es vuestra liga habitual de la peña, con temporada larga y equipos guardados. Torneos NAF es para un evento grande de un solo día, con inscripción rápida (sin cuenta) y emparejamiento suizo — no está certificado por la NAF, el nombre es solo por el estilo de reglamento en el que se inspira.",
+    sortOrder: 6,
   },
 ];

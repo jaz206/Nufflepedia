@@ -31,9 +31,9 @@ export default async function ArenaPage() {
     <div className="mx-auto w-full max-w-4xl space-y-10 px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Arena</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Asistente de Partido</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--ink-3)" }}>
-            Asistente de Partido en vivo — amistosos con tus equipos, con los de un amigo, o con un rival creado al vuelo.
+            Partido en vivo — amistosos con tus equipos, con los de un amigo, o con un rival creado al vuelo.
           </p>
         </div>
         <Link href="/arena/nuevo" className="btn-primary">
@@ -109,7 +109,7 @@ export default async function ArenaPage() {
         <Link href="/nufflepedia/partido" className="underline">
           chuleta de la Secuencia de Partido
         </Link>{" "}
-        sigue disponible en La Biblioteca.
+        sigue disponible en la Biblioteca de Reglas.
       </p>
     </div>
   );

@@ -110,9 +110,9 @@ export default async function DashboardPage() {
   ];
 
   const statCards = [
-    { href: "/equipos", label: "Equipos", value: teams.length },
-    { href: "/competiciones", label: "Competiciones activas", value: entries.length },
-    { href: "/arena", label: "Partidos en la Arena", value: liveMatches.length },
+    { href: "/equipos", label: "Mis Equipos", value: teams.length },
+    { href: "/competiciones", label: "Torneos y ligas activos", value: entries.length },
+    { href: "/arena", label: "Partidos del Asistente de Partido", value: liveMatches.length },
   ];
 
   return (
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
           {liveMatches.length > 0 && (
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Mis partidos en la Arena</h2>
+                <h2 className="text-lg font-semibold">Mis partidos del Asistente de Partido</h2>
                 <Link href="/arena" className="btn-secondary">
                   Ver todos
                 </Link>
@@ -295,7 +295,7 @@ export default async function DashboardPage() {
               <h2 className="mb-3 text-lg font-semibold">Estadísticas de la liga</h2>
               <p className="mb-3 text-xs" style={{ color: "var(--ink-3)" }}>
                 Global, de todos los entrenadores. Solo touchdowns y bajas de competiciones por ahora — las
-                estadísticas de los amistosos de la Arena todavía no se suman aquí.
+                estadísticas de los amistosos del Asistente de Partido todavía no se suman aquí.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[3px] border p-4" style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}>

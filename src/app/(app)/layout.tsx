@@ -3,11 +3,12 @@ import { prisma } from "@/server/db/prisma";
 import Sidebar from "./Sidebar";
 
 /**
- * Layout de la zona autenticada (Dashboard, Equipos, Competiciones, Pizarra,
- * Arena). requireUser() redirige a /login si no hay sesión — es el guard
- * de acceso pedido para estas rutas. La Nufflepedia se queda FUERA de este
- * grupo a propósito: MASTER_PLAN.md la marca como pública (gancho de
- * entrada sin cuenta), así que vive en su propio layout sin este guard.
+ * Layout de la zona autenticada (Dashboard, Mis Equipos, Torneos y Ligas
+ * Locales, Torneos NAF, Pizarra Táctica, Asistente de Partido).
+ * requireUser() redirige a /login si no hay sesión — es el guard de acceso
+ * pedido para estas rutas. La Nufflepedia se queda FUERA de este grupo a
+ * propósito: MASTER_PLAN.md la marca como pública (gancho de entrada sin
+ * cuenta), así que vive en su propio layout sin este guard.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   await requireUser();

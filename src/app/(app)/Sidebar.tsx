@@ -18,8 +18,9 @@ export default function Sidebar({ items }: { items: NavItem[] }) {
     >
       {items.map((item) => {
         // Resalta solo la entrada más específica que coincide (evita que
-        // "La Biblioteca" y "Tablas" se marquen ambas activas a la vez en
-        // /nufflepedia/tablas, ya que una es prefijo de la otra).
+        // "Biblioteca de Reglas" y "Tablas de Tiradas" se marquen ambas
+        // activas a la vez en /nufflepedia/tablas, ya que una es prefijo
+        // de la otra).
         const matches = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
         const mostSpecific = items.filter((i) => matches(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
         const active = matches(item.href) && mostSpecific?.href === item.href;

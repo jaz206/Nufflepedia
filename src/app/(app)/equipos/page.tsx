@@ -20,9 +20,9 @@ export default async function EquiposPage() {
     <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Equipos</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Mis Equipos</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--ink-3)" }}>
-            El Cuartel — tus franquicias.
+            Tus franquicias.
           </p>
         </div>
         <Link href="/equipos/nuevo" className="btn-primary">

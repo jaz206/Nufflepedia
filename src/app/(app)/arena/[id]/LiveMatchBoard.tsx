@@ -845,8 +845,8 @@ function FinishedStage({
         </p>
         <p className="mt-2 text-xs italic" style={{ color: "var(--ink-3)" }}>
           A qué afecta: cada evento ya ha repartido sus PE (Puntos de Estrellato), y cada baja con secuela ha
-          actualizado el estado del jugador — todo esto se aplicó directamente a la plantilla real de El Cuartel de
-          ambos equipos, no a una copia.
+          actualizado el estado del jugador — todo esto se aplicó directamente a la plantilla real de ambos
+          equipos, no a una copia.
         </p>
       </Panel>
       <EventLog events={events} homeTeam={homeTeam} awayTeam={awayTeam} homeEntryId={homeTeam.entryId} />
