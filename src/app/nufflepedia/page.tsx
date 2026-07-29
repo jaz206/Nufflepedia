@@ -13,35 +13,28 @@ export default async function NufflepediaPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 space-y-16">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Nufflepedia</h1>
-        <p className="mt-2 text-zinc-500">
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--gold)" }}>
+          Nufflepedia
+        </h1>
+        <p className="mt-2" style={{ color: "var(--ink-3)" }}>
           Motor de reglas Season 3 — {skills.length} habilidades, {traits.length} rasgos.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="/nufflepedia/razas"
-            className="inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Ver las {raceCount} razas →
-          </Link>
-          <Link
-            href="/nufflepedia/estrellas"
-            className="inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Ver los {starCount} Jugadores Estrella →
-          </Link>
-          <Link
-            href="/nufflepedia/partido"
-            className="inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Secuencia de Partido →
-          </Link>
-          <Link
-            href="/nufflepedia/tablas"
-            className="inline-block rounded-md border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Ver las Tablas de juego →
-          </Link>
+          {[
+            { href: "/nufflepedia/razas", label: `Ver las ${raceCount} razas →` },
+            { href: "/nufflepedia/estrellas", label: `Ver los ${starCount} Jugadores Estrella →` },
+            { href: "/nufflepedia/partido", label: "Secuencia de Partido →" },
+            { href: "/nufflepedia/tablas", label: "Ver las Tablas de juego →" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="inline-block rounded-[3px] border px-4 py-2 text-sm transition-colors hover:border-[var(--gold-soft)]"
+              style={{ borderColor: "var(--border-strong)", background: "var(--surface-1)", color: "var(--ink-2)" }}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
       </div>
 

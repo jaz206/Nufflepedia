@@ -38,15 +38,14 @@ export default function SequenceChecklist({ sections }: { sections: Section[] })
   return (
     <div className="space-y-10">
       {checked.size > 0 && (
-        <div className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 px-4 py-2 text-sm">
-          <span className="text-zinc-500">
+        <div
+          className="flex items-center justify-between rounded-[3px] border px-4 py-2 text-sm"
+          style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}
+        >
+          <span style={{ color: "var(--ink-3)" }}>
             {checked.size} / {totalSteps} pasos marcados
           </span>
-          <button
-            type="button"
-            onClick={reset}
-            className="text-zinc-500 hover:text-foreground underline"
-          >
+          <button type="button" onClick={reset} className="underline" style={{ color: "var(--ink-3)" }}>
             Reiniciar
           </button>
         </div>
@@ -55,21 +54,22 @@ export default function SequenceChecklist({ sections }: { sections: Section[] })
       {sections.map((section) => {
         const doneInSection = section.steps.filter((s) => checked.has(s.id)).length;
         return (
-          <section
-            key={section.key}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden"
-          >
-            <header className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+          <section key={section.key} className="rounded-[3px] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+            <header className="px-5 py-4 border-b" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
               <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                <h2 className="text-xl font-semibold">{section.title}</h2>
-                <span className="text-xs text-zinc-500 font-mono">
+                <h2 className="text-xl font-semibold" style={{ color: "var(--gold)" }}>
+                  {section.title}
+                </h2>
+                <span className="text-xs font-mono" style={{ color: "var(--ink-3)" }}>
                   {doneInSection}/{section.steps.length}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-zinc-500">{section.intro}</p>
+              <p className="mt-1 text-sm" style={{ color: "var(--ink-3)" }}>
+                {section.intro}
+              </p>
             </header>
 
-            <ol className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <ol className="divide-y" style={{ borderColor: "var(--border)" }}>
               {section.steps.map((step) => {
                 const done = checked.has(step.id);
                 return (
@@ -83,17 +83,25 @@ export default function SequenceChecklist({ sections }: { sections: Section[] })
                       />
                       <span className="flex-1 min-w-0">
                         <span className="flex items-baseline gap-2 flex-wrap">
-                          <span className="text-xs font-mono text-zinc-400">Paso {step.sortOrder}</span>
-                          <span className={`font-semibold ${done ? "line-through text-zinc-400" : ""}`}>
+                          <span className="text-xs font-mono" style={{ color: "var(--ink-3)" }}>
+                            Paso {step.sortOrder}
+                          </span>
+                          <span
+                            className="font-semibold"
+                            style={done ? { textDecoration: "line-through", color: "var(--ink-3)" } : undefined}
+                          >
                             {step.title}
                           </span>
                           {step.dice && (
-                            <span className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                            <span
+                              className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded-[3px]"
+                              style={{ background: "var(--surface-2)", color: "var(--ink-3)" }}
+                            >
                               {step.dice}
                             </span>
                           )}
                         </span>
-                        <span className={`block mt-1 text-sm ${done ? "text-zinc-400" : "text-zinc-600 dark:text-zinc-300"}`}>
+                        <span className="block mt-1 text-sm" style={{ color: done ? "var(--ink-3)" : "var(--ink-2)" }}>
                           {step.description}
                         </span>
                       </span>
@@ -104,7 +112,7 @@ export default function SequenceChecklist({ sections }: { sections: Section[] })
             </ol>
 
             {section.note && (
-              <p className="px-5 py-3 text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">
+              <p className="px-5 py-3 text-xs border-t" style={{ color: "var(--ink-3)", background: "var(--surface-2)", borderColor: "var(--border)" }}>
                 {section.note}
               </p>
             )}

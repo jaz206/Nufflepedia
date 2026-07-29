@@ -7,8 +7,10 @@ export default async function EstrellasPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Jugadores Estrella</h1>
-        <p className="mt-2 text-zinc-500">
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--gold)" }}>
+          Jugadores Estrella
+        </h1>
+        <p className="mt-2" style={{ color: "var(--ink-3)" }}>
           Los {stars.length} Jugadores Estrella oficiales, con atributos, habilidades, coste y su
           regla especial única.
         </p>

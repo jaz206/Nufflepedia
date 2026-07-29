@@ -52,26 +52,32 @@ function gp(n: number) {
 
 function RaceCard({ race }: { race: Race }) {
   return (
-    <section className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-      <header className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+    <section className="rounded-[3px] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+      <header className="px-4 py-3 border-b" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
-          <h2 className="text-xl font-semibold">{race.name}</h2>
-          <span className="text-xs text-zinc-500">
+          <h2 className="text-xl font-semibold" style={{ color: "var(--gold)" }}>
+            {race.name}
+          </h2>
+          <span className="text-xs" style={{ color: "var(--ink-3)" }}>
             Reroll {gp(race.rerollCost)} · Apotecario: {race.allowsApothecary ? "Sí" : "No"}
-            {race.tier ? ` · Tier ${race.tier}` : ""}
+            {race.tier ? ` · Dificultad ${race.tier}/5` : ""}
           </span>
         </div>
-        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--ink-3)" }}>
           {race.leagues.length > 0 && <span>Ligas: {race.leagues.join(", ")}</span>}
           {race.specialRules.length > 0 && <span>Reglas: {race.specialRules.join(", ")}</span>}
         </div>
-        {race.playstyle && <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{race.playstyle}</p>}
+        {race.playstyle && (
+          <p className="mt-2 text-sm" style={{ color: "var(--ink-2)" }}>
+            {race.playstyle}
+          </p>
+        )}
       </header>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[720px]">
           <thead>
-            <tr className="text-[10px] uppercase tracking-wide text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
+            <tr className="text-[10px] uppercase tracking-wide border-b" style={{ color: "var(--ink-3)", borderColor: "var(--border)" }}>
               <th className="text-left font-medium px-3 py-2">Cant.</th>
               <th className="text-left font-medium px-3 py-2">Puesto</th>
               <th className="text-right font-medium px-3 py-2">Coste</th>
@@ -87,13 +93,15 @@ function RaceCard({ race }: { race: Race }) {
           </thead>
           <tbody>
             {race.positions.map((p) => (
-              <tr key={p.id} className="border-b border-zinc-100 dark:border-zinc-900 last:border-0 align-top">
-                <td className="px-3 py-2 font-mono text-zinc-500 whitespace-nowrap">
+              <tr key={p.id} className="border-b last:border-0 align-top" style={{ borderColor: "var(--border)" }}>
+                <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: "var(--ink-3)" }}>
                   {p.quantityMin}-{p.quantityMax}
                 </td>
                 <td className="px-3 py-2">
                   <div className="font-medium">{p.name}</div>
-                  <div className="text-[11px] text-zinc-400">{p.playerTags.join(", ")}</div>
+                  <div className="text-[11px]" style={{ color: "var(--ink-3)" }}>
+                    {p.playerTags.join(", ")}
+                  </div>
                 </td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums whitespace-nowrap">{gp(p.cost)}</td>
                 <td className="px-2 py-2 text-center font-mono tabular-nums">{p.ma}</td>
@@ -101,11 +109,15 @@ function RaceCard({ race }: { race: Race }) {
                 <td className="px-2 py-2 text-center font-mono tabular-nums">{p.ag}+</td>
                 <td className="px-2 py-2 text-center font-mono tabular-nums">{p.pa === null ? "–" : `${p.pa}+`}</td>
                 <td className="px-2 py-2 text-center font-mono tabular-nums">{p.av}+</td>
-                <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300 text-[13px]">
+                <td className="px-3 py-2 text-[13px]" style={{ color: "var(--ink-2)" }}>
                   {p.startingSkillKeys.length ? p.startingSkillKeys.join(", ") : "—"}
                 </td>
-                <td className="px-2 py-2 text-center font-mono text-zinc-500">{cats(p.primaryCategories)}</td>
-                <td className="px-2 py-2 text-center font-mono text-zinc-500">{cats(p.secondaryCategories)}</td>
+                <td className="px-2 py-2 text-center font-mono" style={{ color: "var(--ink-3)" }}>
+                  {cats(p.primaryCategories)}
+                </td>
+                <td className="px-2 py-2 text-center font-mono" style={{ color: "var(--ink-3)" }}>
+                  {cats(p.secondaryCategories)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -138,7 +150,7 @@ export default function RazasBrowser({ races }: { races: Race[] }) {
         className="input mb-6"
       />
       {query && (
-        <p className="text-sm text-zinc-500 -mt-3 mb-6">
+        <p className="text-sm -mt-3 mb-6" style={{ color: "var(--ink-3)" }}>
           {filtered.length} raza(s) para &ldquo;{query}&rdquo;
         </p>
       )}
@@ -146,7 +158,11 @@ export default function RazasBrowser({ races }: { races: Race[] }) {
         {filtered.map((race) => (
           <RaceCard key={race.id} race={race} />
         ))}
-        {filtered.length === 0 && <p className="text-zinc-500 text-sm">Ninguna raza coincide.</p>}
+        {filtered.length === 0 && (
+          <p className="text-sm" style={{ color: "var(--ink-3)" }}>
+            Ninguna raza coincide.
+          </p>
+        )}
       </div>
     </div>
   );

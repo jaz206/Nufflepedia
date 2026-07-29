@@ -23,8 +23,13 @@ const gp = (n: number) => `${(n / 1000).toLocaleString("es-ES")}k`;
 
 function StatBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col items-center px-2.5 py-1 border border-zinc-200 dark:border-zinc-800 first:rounded-l-md last:rounded-r-md">
-      <span className="text-[9px] uppercase tracking-wide text-zinc-400">{label}</span>
+    <div
+      className="flex flex-col items-center px-2.5 py-1 border first:rounded-l-[3px] last:rounded-r-[3px]"
+      style={{ borderColor: "var(--border)" }}
+    >
+      <span className="text-[9px] uppercase tracking-wide" style={{ color: "var(--ink-3)" }}>
+        {label}
+      </span>
       <span className="font-mono tabular-nums text-sm">{value}</span>
     </div>
   );
@@ -32,15 +37,19 @@ function StatBox({ label, value }: { label: string; value: string | number }) {
 
 function StarCard({ star }: { star: Star }) {
   return (
-    <article className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-4">
+    <article className="rounded-[3px] border p-4" style={{ borderColor: "var(--border)", background: "var(--surface-1)" }}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">{star.name}</h2>
-          <p className="text-[11px] text-zinc-400">{star.playerTags.join(", ")}</p>
+          <p className="text-[11px]" style={{ color: "var(--ink-3)" }}>
+            {star.playerTags.join(", ")}
+          </p>
         </div>
         <div className="text-right">
-          <div className="font-mono text-amber-600 dark:text-amber-400">{gp(star.cost)}</div>
-          <div className="text-[11px] text-zinc-500">
+          <div className="font-mono font-semibold" style={{ color: "var(--gold)" }}>
+            {gp(star.cost)}
+          </div>
+          <div className="text-[11px]" style={{ color: "var(--ink-3)" }}>
             {star.playsForAny ? "Cualquier equipo" : star.leagues.join(", ")}
           </div>
         </div>
@@ -55,14 +64,18 @@ function StarCard({ star }: { star: Star }) {
       </div>
 
       {star.skillKeys.length > 0 && (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{star.skillKeys.join(", ")}</p>
+        <p className="mt-3 text-sm" style={{ color: "var(--ink-2)" }}>
+          {star.skillKeys.join(", ")}
+        </p>
       )}
 
       {star.specialRuleName && (
-        <div className="mt-3 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3">
-          <span className="text-sm font-semibold text-[var(--accent)]">{star.specialRuleName}</span>
+        <div className="mt-3 rounded-[3px] border p-3" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
+            {star.specialRuleName}
+          </span>
           {star.specialRuleText && (
-            <p className="mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-300">
+            <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--ink-2)" }}>
               {star.specialRuleText}
             </p>
           )}
@@ -97,7 +110,7 @@ export default function EstrellasBrowser({ stars }: { stars: Star[] }) {
         className="input mb-6"
       />
       {query && (
-        <p className="text-sm text-zinc-500 -mt-3 mb-6">
+        <p className="text-sm -mt-3 mb-6" style={{ color: "var(--ink-3)" }}>
           {filtered.length} estrella(s) para &ldquo;{query}&rdquo;
         </p>
       )}
@@ -105,7 +118,11 @@ export default function EstrellasBrowser({ stars }: { stars: Star[] }) {
         {filtered.map((star) => (
           <StarCard key={star.id} star={star} />
         ))}
-        {filtered.length === 0 && <p className="text-zinc-500 text-sm">Ninguna estrella coincide.</p>}
+        {filtered.length === 0 && (
+          <p className="text-sm" style={{ color: "var(--ink-3)" }}>
+            Ninguna estrella coincide.
+          </p>
+        )}
       </div>
     </div>
   );

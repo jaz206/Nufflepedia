@@ -10,8 +10,10 @@ export default async function RazasPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Razas</h1>
-        <p className="mt-2 text-zinc-500">
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--gold)" }}>
+          Razas
+        </h1>
+        <p className="mt-2" style={{ color: "var(--ink-3)" }}>
           Las {races.length} plantillas oficiales de la Temporada 3, con costes, límites,
           atributos y acceso a habilidades.
         </p>
