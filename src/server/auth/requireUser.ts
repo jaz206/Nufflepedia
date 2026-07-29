@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/server/db/prisma";
@@ -12,8 +13,13 @@ import type { User } from "@prisma/client";
  * equivalente de `auth.uid()` en esta arquitectura: como Prisma habla con
  * Postgres por conexión directa (no vía PostgREST), el filtrado por dueño
  * se hace en este guard + en cada query, no en políticas RLS.
+ *
+ * Envuelto en `cache()` de React: el layout de la zona autenticada y la
+ * página de cada ruta la llaman por separado, y sin esto cada una repetía
+ * la llamada de red a Supabase Auth (`getUser()`) y la consulta a
+ * Postgres — `cache()` dedupe dentro de la misma petición.
  */
-export async function requireUser(): Promise<User> {
+export const requireUser = cache(async (): Promise<User> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -47,4 +53,4 @@ export async function requireUser(): Promise<User> {
       role: existingCount === 0 ? "ADMIN" : "USER",
     },
   });
-}
+});
