@@ -190,6 +190,7 @@ export default function TeamBuilder({
 }) {
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>();
+  const [expandedStar, setExpandedStar] = useState<string | null>(null);
   const skillIndex = useMemo(() => buildSkillInfoIndex([...skills, ...traits]), [skills, traits]);
   const skillNameByKey = useMemo(
     () => new Map(skills.filter((s): s is SkillInfo & { key: string } => !!s.key).map((s) => [s.key, s.name])),
@@ -549,48 +550,56 @@ export default function TeamBuilder({
               Ninguna Estrella juega para las ligas de {race.name}.
             </p>
           ) : (
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               {stars.map((star) => {
                 const copies = countForStar(star.key);
                 const maxed = copies >= MAX_COPIES_PER_STAR;
                 const tooExpensive = star.cost > optimistic.treasury;
                 const disabled = maxed || tooExpensive;
+                const expanded = expandedStar === star.key;
                 return (
                   <div
                     key={star.key}
-                    className="rounded-[3px] border px-3 py-2"
+                    className="rounded-[3px] border"
                     style={{ borderColor: "var(--gold-soft)", background: "var(--surface-1)" }}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-medium">
-                          {star.name}{" "}
-                          <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
-                            ({copies}/{MAX_COPIES_PER_STAR})
-                          </span>
-                        </p>
-                        <p className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
-                          {statLine(star)} · {star.cost.toLocaleString("es-ES")} MO
-                        </p>
-                      </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedStar((cur) => (cur === star.key ? null : star.key))}
+                        className="min-w-0 flex-1 text-left"
+                        aria-expanded={expanded}
+                      >
+                        <span className="text-sm font-medium">{star.name}</span>{" "}
+                        <span className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
+                          {statLine(star)} · {star.cost.toLocaleString("es-ES")} MO · {copies}/{MAX_COPIES_PER_STAR}
+                        </span>{" "}
+                        <span className="text-xs" style={{ color: "var(--ink-3)" }}>
+                          {expanded ? "▲" : "▼"}
+                        </span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleHireStar(star)}
                         disabled={disabled}
-                        className="btn-primary"
+                        className="btn-primary shrink-0"
                         style={{ padding: "4px 12px", fontSize: "12px" }}
                       >
                         {maxed ? "Al máximo" : tooExpensive ? "Sin fondos" : "Fichar"}
                       </button>
                     </div>
-                    <SkillPillList names={star.skillKeys} index={skillIndex} />
-                    {star.specialRuleName && (
-                      <p className="mt-1 text-xs" style={{ color: "var(--gold)" }}>
-                        {star.specialRuleName}
-                        {star.specialRuleText && (
-                          <span style={{ color: "var(--ink-3)" }}> — {star.specialRuleText}</span>
+                    {expanded && (
+                      <div className="border-t px-3 py-2" style={{ borderColor: "var(--border)" }}>
+                        <SkillPillList names={star.skillKeys} index={skillIndex} />
+                        {star.specialRuleName && (
+                          <p className="mt-1 text-xs" style={{ color: "var(--gold)" }}>
+                            {star.specialRuleName}
+                            {star.specialRuleText && (
+                              <span style={{ color: "var(--ink-3)" }}> — {star.specialRuleText}</span>
+                            )}
+                          </p>
                         )}
-                      </p>
+                      </div>
                     )}
                   </div>
                 );
@@ -671,6 +680,11 @@ export default function TeamBuilder({
                           />
                           {pos && <RaceBadge label={getPositionFlavorLabel(pos.playerTags)} />}
                         </div>
+                      )}
+                      {pos && (
+                        <p className="text-xs font-medium" style={{ color: "var(--gold)" }}>
+                          {pos.name}
+                        </p>
                       )}
                       <p className="font-mono text-xs" style={{ color: "var(--ink-3)" }}>
                         {stats ? statLine(stats) : "?"}

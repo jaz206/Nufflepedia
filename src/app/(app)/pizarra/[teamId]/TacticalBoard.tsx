@@ -275,20 +275,48 @@ export default function TacticalBoard({
             style={{
               width: GRID_COLS * CELL,
               height: GRID_ROWS * CELL,
-              background:
-                "repeating-linear-gradient(0deg, var(--surface-2) 0 1px, var(--surface-1) 1px " +
-                CELL +
-                "px), repeating-linear-gradient(90deg, var(--surface-2) 0 1px, transparent 1px " +
-                CELL +
-                "px)",
-              border: "1px solid var(--border-strong)",
+              background: `repeating-linear-gradient(90deg, #4d8f41 0, #4d8f41 ${CELL}px, #457f3a ${CELL}px, #457f3a ${2 * CELL}px)`,
+              border: "3px solid #2c4f27",
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
               cursor: selectedBenchPlayerId ? "crosshair" : "default",
             }}
           >
+            {/* Casillas: líneas finas blancas translúcidas sobre el césped */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage:
+                  `repeating-linear-gradient(0deg, rgba(255,255,255,0.25) 0 1px, transparent 1px ${CELL}px), ` +
+                  `repeating-linear-gradient(90deg, rgba(255,255,255,0.25) 0 1px, transparent 1px ${CELL}px)`,
+              }}
+            />
+
+            {/* Zonas de ensayo, primera y última columna */}
+            <div
+              className="pointer-events-none absolute top-0 bottom-0"
+              style={{
+                left: 0,
+                width: CELL,
+                background: "repeating-linear-gradient(45deg, rgba(122,30,30,0.55) 0 8px, rgba(90,20,20,0.55) 8px 16px)",
+              }}
+            />
+            <div
+              className="pointer-events-none absolute top-0 bottom-0"
+              style={{
+                left: (GRID_COLS - 1) * CELL,
+                width: CELL,
+                background: "repeating-linear-gradient(45deg, rgba(122,30,30,0.55) 0 8px, rgba(90,20,20,0.55) 8px 16px)",
+              }}
+            />
+
+            {/* Límites de las zonas anchas (4 casillas desde cada banda) */}
+            <div className="pointer-events-none absolute left-0 right-0" style={{ top: 4 * CELL, borderTop: "2px dashed rgba(255,255,255,0.35)" }} />
+            <div className="pointer-events-none absolute left-0 right-0" style={{ top: 11 * CELL, borderTop: "2px dashed rgba(255,255,255,0.35)" }} />
+
             {/* Línea de scrimmage, referencia visual */}
             <div
-              className="absolute top-0 bottom-0"
-              style={{ left: 13 * CELL, width: 1, background: "var(--accent)", opacity: 0.4 }}
+              className="pointer-events-none absolute top-0 bottom-0"
+              style={{ left: 13 * CELL, borderLeft: "2px dashed rgba(255,244,214,0.85)" }}
             />
 
             {tokens.map((t) => {
@@ -309,8 +337,10 @@ export default function TacticalBoard({
                     top: t.y * CELL,
                     width: CELL - 2,
                     height: CELL - 2,
-                    background: mine ? "var(--accent)" : "var(--ink-3)",
-                    color: mine ? "var(--accent-ink)" : "var(--surface-1)",
+                    background: mine ? "var(--accent)" : "#241a14",
+                    color: mine ? "var(--accent-ink)" : "#f4ead8",
+                    border: "1.5px solid rgba(255,255,255,0.85)",
+                    boxShadow: "1px 1px 0 rgba(0,0,0,0.35)",
                     outline: selectedKey === t.key ? "2px solid var(--gold)" : "none",
                     outlineOffset: 1,
                     touchAction: "none",
